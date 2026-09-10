@@ -3,9 +3,10 @@
  * https://docs.expo.io/guides/color-schemes/
  */
 
-import { Text as DefaultText, View as DefaultView } from 'react-native';
+import { Text as DefaultText, View as DefaultView, StyleSheet } from 'react-native';
 
 import Colors from '@/constants/Colors';
+import { FONT_FAMILY } from '@/constants/Fonts';
 import { useColorScheme } from './useColorScheme';
 
 type ThemeProps = {
@@ -33,8 +34,17 @@ export function useThemeColor(
 export function Text(props: TextProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const flatStyle = StyleSheet.flatten(style);
+  const requestedWeight = flatStyle?.fontWeight;
+  const fontWeight =
+    requestedWeight === '100' || requestedWeight === '200' ? requestedWeight : '200';
 
-  return <DefaultText style={[{ color }, style]} {...otherProps} />;
+  return (
+    <DefaultText
+      style={[{ color, fontFamily: FONT_FAMILY, fontWeight }, style, { fontWeight }]}
+      {...otherProps}
+    />
+  );
 }
 
 export function View(props: ViewProps) {
