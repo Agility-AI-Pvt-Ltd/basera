@@ -14,6 +14,10 @@ export type SignupStackParamList = {
 
 export type HomeStackParamList = {
   Home: undefined;
+  SettingsMenu: undefined;
+  EditPersonalInfo: undefined;
+  EditPhoto: undefined;
+  EditLocation: undefined;
 };
 
 export type AdoptStackParamList = {
@@ -25,7 +29,16 @@ export type CommunityStackParamList = {
 };
 
 export type PetsStackParamList = {
-  Pets: undefined;
+  MyPetsList: undefined;
+  PetDetail: { petId: string; initialTab?: 'health' | 'training' | 'nutrition' };
+  CreatePetProfile: undefined;
+  EditPetProfile: { petId: string };
+  AddHealthSchedule: { petId: string; eventId?: string };
+  UploadDocument: { petId: string };
+  TrainingOnboarding: { petId: string };
+  TrainingPreferences: { petId: string };
+  NutritionOnboarding: { petId: string };
+  NutritionPreferences: { petId: string };
 };
 
 export type MainTabParamList = {

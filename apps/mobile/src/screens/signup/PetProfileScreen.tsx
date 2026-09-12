@@ -13,6 +13,7 @@ import {
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { usePets } from '@/hooks/usePets';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 type Nav = NativeStackNavigationProp<SignupStackParamList, 'PetProfile'>;
@@ -21,6 +22,7 @@ export default function PetProfileScreen() {
   const navigation = useNavigation<Nav>();
   const { isReady: authReady } = useAuthStatus();
   const { isReady, profile, updateProfile } = useUserProfile();
+  const { createPet } = usePets();
 
   const [name, setName] = useState(profile?.pet?.name ?? '');
   const [breed, setBreed] = useState(profile?.pet?.breed ?? '');
@@ -57,6 +59,11 @@ export default function PetProfileScreen() {
     await updateProfile({
       pet: { name: name.trim(), breed: breed.trim() },
     });
+    try {
+      await createPet({ name: name.trim(), breed: breed.trim(), species: 'dog' });
+    } catch {
+      // pets table may not be migrated yet — signup still advances
+    }
     goPacks();
   };
 
@@ -65,6 +72,15 @@ export default function PetProfileScreen() {
     await updateProfile({
       pet: { name: name.trim() || 'My dog', breed: breed.trim() },
     });
+    try {
+      await createPet({
+        name: name.trim() || 'My dog',
+        breed: breed.trim(),
+        species: 'dog',
+      });
+    } catch {
+      // ignore if migration not applied
+    }
     goPacks();
   };
 

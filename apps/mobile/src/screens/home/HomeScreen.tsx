@@ -1,4 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
   Pressable,
@@ -13,17 +15,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CircularImage } from '@/components/CircularImage';
 import { CoverImage } from '@/components/CoverImage';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
 import { BRAND_PURPLE, CATEGORIES, FEATURED_PETS, HOME_IMAGES } from '@/constants/home';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import type { HomeStackParamList } from '@/src/navigation/types';
 
 const H_PADDING = 20;
 const CARD_GAP = 16;
 const TAB_BAR_CLEARANCE = 120;
 const CATEGORY_SIZE = 72;
 
+type Nav = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
+
 export default function HomeScreen() {
+  const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const [rowWidth, setRowWidth] = useState(windowWidth);
@@ -52,7 +59,12 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE + insets.bottom }}>
         {/* Header */}
         <View style={styles.header}>
-          <CircularImage source={HOME_IMAGES.avatar} size={44} />
+          <Pressable
+            onPress={() => navigation.navigate('SettingsMenu')}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings">
+            <UserAvatar photoUri={profile?.photoUri} size={44} />
+          </Pressable>
           <Pressable style={styles.locationBlock}>
             <View style={styles.locationRow}>
               <Text style={styles.locationLabel}>Location</Text>

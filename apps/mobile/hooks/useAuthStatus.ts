@@ -42,8 +42,9 @@ export function useAuthStatus() {
   }, []);
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) throw error;
+    setSession(null);
   }, []);
 
   const phone = fromE164Indian(session?.user.phone);

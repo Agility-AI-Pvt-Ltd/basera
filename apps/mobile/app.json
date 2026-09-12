@@ -35,7 +35,14 @@
       ],
       "expo-web-browser",
       "expo-asset",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Basera to access your photos for your profile picture.",
+          "cameraPermission": "Allow Basera to use the camera for your profile picture."
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

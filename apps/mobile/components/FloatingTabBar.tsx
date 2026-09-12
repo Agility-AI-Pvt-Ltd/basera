@@ -1,5 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -32,9 +33,31 @@ const SPRING = {
   mass: 0.55,
 };
 
+/** Nested routes where the floating tab bar should be hidden. */
+const HIDE_TAB_BAR_ROUTES: Record<string, Set<string>> = {
+  HomeTab: new Set(['SettingsMenu', 'EditPersonalInfo', 'EditPhoto', 'EditLocation']),
+  PetsTab: new Set([
+    'CreatePetProfile',
+    'EditPetProfile',
+    'AddHealthSchedule',
+    'UploadDocument',
+    'TrainingOnboarding',
+    'TrainingPreferences',
+    'NutritionOnboarding',
+    'NutritionPreferences',
+    'PetDetail',
+  ]),
+};
+
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const indicatorX = useSharedValue(0);
+
+  const activeTabRoute = state.routes[state.index];
+  const nestedRouteName =
+    getFocusedRouteNameFromRoute(activeTabRoute) ??
+    (activeTabRoute.name === 'HomeTab' ? 'Home' : 'MyPetsList');
+  const hideTabBar = HIDE_TAB_BAR_ROUTES[activeTabRoute.name]?.has(nestedRouteName) ?? false;
 
   const tabRoutes = TABS.map(
     (tab) => state.routes.find((r) => r.name === tab.routeName)!,
@@ -54,6 +77,10 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const bubbleStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: indicatorX.value * slotWidth + slotWidth / 2 - TAB_SIZE / 2 }],
   }));
+
+  if (hideTabBar) {
+    return null;
+  }
 
   return (
     <View

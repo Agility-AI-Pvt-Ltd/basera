@@ -86,7 +86,11 @@ function RootNavigator() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={theme}>{content}</NavigationContainer>
+      <NavigationContainer
+        key={session?.user?.id ?? 'logged-out'}
+        theme={theme}>
+        {content}
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
