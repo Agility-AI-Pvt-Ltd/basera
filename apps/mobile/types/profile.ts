@@ -21,6 +21,9 @@ export type UserProfile = {
   adoptionSetupDone: boolean;
   selectedPackIds: string[];
   signupComplete: boolean;
+  neighborDiscoverability: 'nobody' | 'area' | 'pack_members' | 'everyone';
+  showDistance: boolean;
+  showPetToNeighbors: boolean;
 };
 
 /** Row shape from public.profiles */
@@ -40,6 +43,9 @@ export type ProfileRow = {
   adoption_setup_done: boolean;
   selected_pack_ids: string[];
   signup_complete: boolean;
+  neighbor_discoverability?: string;
+  show_distance?: boolean;
+  show_pet_to_neighbors?: boolean;
 };
 
 export function rowToProfile(row: ProfileRow): UserProfile {
@@ -59,6 +65,10 @@ export function rowToProfile(row: ProfileRow): UserProfile {
     adoptionSetupDone: row.adoption_setup_done,
     selectedPackIds: row.selected_pack_ids ?? [],
     signupComplete: row.signup_complete,
+    neighborDiscoverability:
+      (row.neighbor_discoverability as UserProfile['neighborDiscoverability']) ?? 'area',
+    showDistance: row.show_distance ?? true,
+    showPetToNeighbors: row.show_pet_to_neighbors ?? true,
   };
 }
 
@@ -79,6 +89,9 @@ export function profileToRow(
     adoption_setup_done: profile.adoptionSetupDone,
     selected_pack_ids: profile.selectedPackIds,
     signup_complete: profile.signupComplete,
+    neighbor_discoverability: profile.neighborDiscoverability,
+    show_distance: profile.showDistance,
+    show_pet_to_neighbors: profile.showPetToNeighbors,
   };
 }
 
@@ -93,6 +106,9 @@ export const EMPTY_PROFILE: UserProfile = {
   adoptionSetupDone: false,
   selectedPackIds: [],
   signupComplete: false,
+  neighborDiscoverability: 'area',
+  showDistance: true,
+  showPetToNeighbors: true,
 };
 
 export function hasCompletedBasics(profile: UserProfile): boolean {

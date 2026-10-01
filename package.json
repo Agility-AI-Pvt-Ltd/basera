@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "dev:mobile": "pnpm --filter @basera/mobile dev",
+    "dev:web": "pnpm --filter @basera/web dev",
     "dev:admin": "pnpm --filter @basera/admin dev",
     "dev:supabase": "supabase start",
     "build": "pnpm -r build",

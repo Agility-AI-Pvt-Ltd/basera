@@ -22,10 +22,22 @@ export type HomeStackParamList = {
 
 export type AdoptStackParamList = {
   Adopt: undefined;
+  CreateListing: undefined;
+  ListingDetail: { listingId: string };
+  ApplyAdoption: { listingId: string };
+  MyAdoption: undefined;
+  ListerApplications: { listingId: string; petName: string };
+  ApplicationReview: { listingId: string; applicationId: string };
+  AdoptionChat: { applicationId: string; title: string };
 };
 
 export type CommunityStackParamList = {
   Community: undefined;
+  PackDetail: { packId: string };
+  CreatePack: undefined;
+  MeetupDetail: { meetupId: string };
+  CreateMeetup: undefined;
+  NeighborDetail: { userId: string };
 };
 
 export type PetsStackParamList = {

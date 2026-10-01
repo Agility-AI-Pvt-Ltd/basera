@@ -3,7 +3,7 @@ import { Sniglet_400Regular, Sniglet_800ExtraBold } from '@expo-google-fonts/sni
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -65,23 +65,43 @@ function RootNavigator() {
   };
 
   const isReady = authReady && onboardingReady && profileReady;
+  const hasEnteredMainAppRef = useRef(false);
 
-  let content: ReactNode = (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator size="large" color="#A78BFA" />
-    </View>
-  );
-
-  if (isReady) {
-    if (!session) {
-      content = <AuthStack initialRouteName={hasCompleted ? 'Phone' : 'Onboarding'} />;
-    } else if (!hasCompleted) {
-      content = <OnboardingStack />;
-    } else if (!isSignupComplete) {
-      content = <SignupStack initialRouteName={getSignupRoute(profile) ?? 'Basics'} />;
-    } else {
-      content = <MainTabs />;
+  useEffect(() => {
+    if (!session?.user?.id) {
+      hasEnteredMainAppRef.current = false;
     }
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (isReady && session && hasCompleted && isSignupComplete) {
+      hasEnteredMainAppRef.current = true;
+    }
+  }, [isReady, session, hasCompleted, isSignupComplete]);
+
+  const showBootstrapLoader = !isReady && !hasEnteredMainAppRef.current;
+
+  let content: ReactNode;
+  if (showBootstrapLoader) {
+    content = (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#A78BFA" />
+      </View>
+    );
+  } else if (!session) {
+    content = <AuthStack initialRouteName={hasCompleted ? 'Phone' : 'Onboarding'} />;
+  } else if (!hasCompleted) {
+    content = <OnboardingStack />;
+  } else if (!isSignupComplete && isReady) {
+    content = <SignupStack initialRouteName={getSignupRoute(profile) ?? 'Basics'} />;
+  } else if (hasEnteredMainAppRef.current || isSignupComplete) {
+    content = <MainTabs />;
+  } else {
+    content = (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#A78BFA" />
+      </View>
+    );
   }
 
   return (

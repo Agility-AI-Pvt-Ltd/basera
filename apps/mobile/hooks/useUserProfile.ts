@@ -71,17 +71,32 @@ export function useUserProfile() {
 
   useEffect(() => {
     let cancelled = false;
+    const sessionUserIdRef = { current: null as string | null };
 
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
+      sessionUserIdRef.current = data.session?.user?.id ?? null;
       void loadForSession(data.session);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      setIsReady(false);
+
+      const nextUserId = session?.user?.id ?? null;
+      const userChanged = sessionUserIdRef.current !== nextUserId;
+      sessionUserIdRef.current = nextUserId;
+
+      // Token refresh on app resume must not unmount navigation (shows Home again).
+      if (event === 'TOKEN_REFRESHED' && !userChanged) {
+        void loadForSession(session);
+        return;
+      }
+
+      if (userChanged) {
+        setIsReady(false);
+      }
       void loadForSession(session);
     });
 

@@ -1,0 +1,126 @@
+.phone {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: visible;
+  background: #fff;
+  z-index: 5;
+}
+
+/* Clips bg + screens only; hero overlay sits outside this */
+.phone__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Cover-scale canvas so screens stay locked to phone_bg.png */
+.phone__canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100vw, calc(100dvh * 1491 / 1055));
+  height: max(100dvh, calc(100vw * 1055 / 1491));
+  transform: translate(-50%, -50%);
+}
+
+.phone__bg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.phone__screen {
+  position: absolute;
+  width: 14.5%;
+  height: auto;
+  object-fit: contain;
+  object-position: bottom center;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 18px 28px rgba(15, 23, 42, 0.18));
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Left purple podium */
+.phone__screen--adoption {
+  left: 16.5%;
+  bottom: 28%;
+  width: 19%;
+  z-index: 3;
+}
+
+/* Tall gold podium (back) */
+.phone__screen--community {
+  left: 39%;
+  bottom: 28%;
+  width: 20.5%;
+  z-index: 2;
+}
+
+/* Orange podium */
+.phone__screen--nutrition {
+  left: 63.5%;
+  bottom: 33%;
+  width: 20%;
+  z-index: 3;
+}
+
+/* Right purple podium */
+.phone__screen--training {
+  left: 83.5%;
+  bottom: 28%;
+  width: 19%;
+  z-index: 3;
+}
+
+.phone__hero-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 20;
+  width: min(72vw, 820px);
+  height: auto;
+  transform: translate(-50%, 14.5%);
+  object-fit: contain;
+  object-position: bottom center;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 12px 28px rgba(15, 23, 42, 0.12));
+}
+
+@media (max-width: 720px) {
+  .phone__screen--adoption {
+    left: 15%;
+    bottom: 27%;
+    width: 21%;
+  }
+
+  .phone__screen--community {
+    left: 37.5%;
+    bottom: 26%;
+    width: 22%;
+  }
+
+  .phone__screen--nutrition {
+    left: 64%;
+    bottom: 32%;
+    width: 21.5%;
+  }
+
+  .phone__screen--training {
+    left: 85%;
+    bottom: 27%;
+    width: 21%;
+  }
+
+  .phone__hero-overlay {
+    width: min(92vw, 480px);
+    transform: translate(-50%, 24%);
+  }
+}

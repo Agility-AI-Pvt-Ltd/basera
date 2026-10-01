@@ -36,6 +36,22 @@ const SPRING = {
 /** Nested routes where the floating tab bar should be hidden. */
 const HIDE_TAB_BAR_ROUTES: Record<string, Set<string>> = {
   HomeTab: new Set(['SettingsMenu', 'EditPersonalInfo', 'EditPhoto', 'EditLocation']),
+  AdoptTab: new Set([
+    'CreateListing',
+    'ListingDetail',
+    'ApplyAdoption',
+    'MyAdoption',
+    'ListerApplications',
+    'ApplicationReview',
+    'AdoptionChat',
+  ]),
+  CommunityTab: new Set([
+    'PackDetail',
+    'CreatePack',
+    'MeetupDetail',
+    'CreateMeetup',
+    'NeighborDetail',
+  ]),
   PetsTab: new Set([
     'CreatePetProfile',
     'EditPetProfile',

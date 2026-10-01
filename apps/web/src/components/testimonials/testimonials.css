@@ -1,0 +1,234 @@
+.testimonials {
+  position: relative;
+  overflow: hidden;
+  background-color: #fff;
+  padding: clamp(3rem, 8vw, 5.5rem) 0 clamp(3rem, 7vw, 5rem);
+}
+
+.testimonials__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('/landing%20page/about_bg.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  transform: rotate(180deg);
+}
+
+.testimonials__inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 5vw, 3rem);
+  text-align: center;
+}
+
+.testimonials__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 1.1rem;
+}
+
+.testimonials__eyebrow-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.testimonials__heading {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  line-height: 1.12;
+  font-weight: 700;
+}
+
+.testimonials__heading-line {
+  display: block;
+  position: relative;
+  color: #5b21b6;
+}
+
+.testimonials__heading-line--orange {
+  color: #ea580c;
+}
+
+.testimonials__heading-line .about-spark {
+  position: absolute;
+  right: 18%;
+  top: 0.05em;
+}
+
+.testimonials__lead {
+  margin: 0 auto 2.25rem;
+  max-width: 42ch;
+  color: #64748b;
+  font-size: clamp(0.95rem, 1.8vw, 1.08rem);
+  line-height: 1.6;
+}
+
+.testimonials__marquee-band {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: clamp(1.5rem, 4vw, 2.5rem) 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.testimonials-marquee {
+  overflow: hidden;
+  width: 100%;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 6%,
+    #000 94%,
+    transparent
+  );
+}
+
+.testimonials-marquee--offset {
+  padding-left: clamp(2rem, 8vw, 7rem);
+}
+
+.testimonials-marquee__track {
+  display: flex;
+  width: max-content;
+  gap: clamp(1rem, 2vw, 1.35rem);
+  animation: testimonials-marquee 55s linear infinite;
+  will-change: transform;
+}
+
+.testimonials-marquee--reverse .testimonials-marquee__track {
+  animation-direction: reverse;
+  animation-duration: 62s;
+}
+
+@keyframes testimonials-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonials-marquee__track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+    padding: 0 clamp(1rem, 4vw, 2rem);
+  }
+
+  .testimonials-marquee {
+    overflow: visible;
+    mask-image: none;
+  }
+
+  .testimonials-marquee--offset {
+    padding-left: 0;
+  }
+}
+
+.testimonial-card {
+  flex: 0 0 auto;
+  width: clamp(300px, 32vw, 380px);
+  text-align: left;
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.35rem 1.35rem 1.2rem;
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.testimonial-card__stars {
+  display: inline-flex;
+  gap: 0.15rem;
+  color: #f59e0b;
+  margin-bottom: 0.85rem;
+}
+
+.testimonial-card__quote-text {
+  margin: 0 0 1.25rem;
+  color: #334155;
+  font-size: clamp(0.92rem, 1.6vw, 1rem);
+  line-height: 1.55;
+  min-height: 4.5em;
+}
+
+.testimonial-card__person {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.testimonial-card__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: #ede9fe;
+  color: #6d28d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.testimonial-card__person strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.testimonial-card__role {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 1024px) {
+  .testimonials__heading-line .about-spark {
+    right: 22%;
+  }
+}
+
+@media (max-width: 759px) {
+  .testimonials__heading-line .about-spark {
+    position: static;
+    display: inline-block;
+    margin-left: 0.35rem;
+    vertical-align: top;
+  }
+
+  .testimonial-card {
+    width: min(88vw, 340px);
+  }
+
+  .testimonial-card__quote-text {
+    min-height: auto;
+  }
+}
