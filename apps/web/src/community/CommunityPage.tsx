@@ -973,7 +973,7 @@ export function CommunityPage() {
   }, [userId]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !userId) return;
     void reload();
   }, [ready, userId, reload]);
 
