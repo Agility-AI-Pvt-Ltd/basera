@@ -855,6 +855,10 @@
 .community-btn {
   width: 100%;
   margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: var(--bc-accent);
   color: #fff;
   border: none;
@@ -863,6 +867,22 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.community-btn:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+.community-btn-spinner {
+  flex-shrink: 0;
+  animation: community-spin 0.7s linear infinite;
+}
+
+@keyframes community-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .community-error {

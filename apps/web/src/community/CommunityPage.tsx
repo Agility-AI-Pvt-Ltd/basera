@@ -18,6 +18,7 @@ import {
   Flag,
   Heart,
   Image as ImageIcon,
+  Loader2,
   MessageCircle,
   MoreVertical,
   Pencil,
@@ -131,7 +132,11 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
     const normalized = normalizeEmail(email);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: normalized,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        // Hosted Auth still needs Magic Link template + custom SMTP for OTP mail.
+        emailRedirectTo: `${window.location.origin}/community`,
+      },
     });
     setLoading(false);
     if (err) setError(err.message);
@@ -181,10 +186,23 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
               placeholder="you@example.com"
               autoComplete="email"
               value={email}
+              disabled={loading}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <button type="button" className="community-btn" disabled={loading} onClick={() => void sendOtp()}>
-              Send OTP
+            <button
+              type="button"
+              className="community-btn"
+              disabled={loading}
+              aria-busy={loading}
+              onClick={() => void sendOtp()}>
+              {loading ? (
+                <>
+                  <Loader2 className="community-btn-spinner" size={18} aria-hidden />
+                  Sending code…
+                </>
+              ) : (
+                'Send OTP'
+              )}
             </button>
           </>
         ) : (
@@ -193,10 +211,23 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
               className="community-input"
               placeholder="6-digit OTP"
               value={otp}
+              disabled={loading}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
             />
-            <button type="button" className="community-btn" disabled={loading} onClick={() => void verify()}>
-              Verify & join
+            <button
+              type="button"
+              className="community-btn"
+              disabled={loading}
+              aria-busy={loading}
+              onClick={() => void verify()}>
+              {loading ? (
+                <>
+                  <Loader2 className="community-btn-spinner" size={18} aria-hidden />
+                  Verifying…
+                </>
+              ) : (
+                'Verify & join'
+              )}
             </button>
           </>
         )}
