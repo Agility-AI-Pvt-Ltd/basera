@@ -1,4 +1,5 @@
 import { AboutSection } from './components/about/AboutSection';
+import { CommunityFab } from './components/CommunityFab';
 import { FooterSection } from './components/footer/FooterSection';
 import { HeroSection } from './components/HeroSection';
 import { PhoneSection } from './components/phone/PhoneSection';
@@ -14,6 +15,7 @@ export default function App() {
         <PhoneSection />
       </main>
       <FooterSection />
+      <CommunityFab />
     </div>
   );
 }

@@ -4,7 +4,7 @@
   padding: clamp(3rem, 8vw, 5.5rem) clamp(1.25rem, 5vw, 3rem)
     clamp(2rem, 5vw, 3rem);
   background-color: #fff;
-  background-image: url("/landing%20page/about_bg.png");
+  background-image: url("/landing-page/about_bg.png");
   background-repeat: no-repeat;
   background-position: center top;
   background-size: cover;

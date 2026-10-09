@@ -4,5 +4,10 @@
   "installCommand": "cd ../.. && pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/((?!landing-page|images|assets|favicon\\.png).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

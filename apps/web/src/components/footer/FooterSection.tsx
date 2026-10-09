@@ -47,7 +47,7 @@ export function FooterSection() {
 
           <img
             className="site-end__cat"
-            src="/landing%20page/cat_footer.png"
+            src="/landing-page/cat_footer.png"
             alt="Cat holding a phone"
             width={560}
             height={560}

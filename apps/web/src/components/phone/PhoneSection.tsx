@@ -3,25 +3,25 @@ import './phone.css';
 const SCREENS = [
   {
     id: 'adoption',
-    src: '/landing%20page/adoption_page.png',
+    src: '/landing-page/adoption_page.png',
     alt: 'Adoption screen',
     className: 'phone__screen--adoption',
   },
   {
     id: 'community',
-    src: '/landing%20page/community_page.png',
+    src: '/landing-page/community_page.png',
     alt: 'Community screen',
     className: 'phone__screen--community',
   },
   {
     id: 'nutrition',
-    src: '/landing%20page/nutrition_page.png',
+    src: '/landing-page/nutrition_page.png',
     alt: 'Nutrition screen',
     className: 'phone__screen--nutrition',
   },
   {
     id: 'training',
-    src: '/landing%20page/training_page.png',
+    src: '/landing-page/training_page.png',
     alt: 'Training screen',
     className: 'phone__screen--training',
   },
@@ -34,7 +34,7 @@ export function PhoneSection() {
         <div className="phone__canvas">
           <img
             className="phone__bg"
-            src="/landing%20page/phone_bg.png"
+            src="/landing-page/phone_bg.png"
             alt=""
             fetchPriority="low"
           />
@@ -52,7 +52,7 @@ export function PhoneSection() {
 
       <img
         className="phone__hero-overlay"
-        src="/landing%20page/hero_img.png"
+        src="/landing-page/hero_img.png"
         alt=""
         loading="lazy"
       />
