@@ -34,21 +34,22 @@ export function useAuthStatus() {
 
   const verifyOtp = useCallback(async (email: string, token: string) => {
     const normalized = normalizeEmail(email);
-    // Local GoTrue often sends recovery mail for signInWithOtp; try both types.
-    let result = await supabase.auth.verifyOtp({
-      email: normalized,
-      token,
-      type: 'email',
-    });
-    if (result.error) {
-      result = await supabase.auth.verifyOtp({
+    const otp = token.replace(/\D/g, '').trim();
+    const types = ['email', 'signup', 'magiclink', 'recovery'] as const;
+    let lastError: Error | null = null;
+    for (const type of types) {
+      const result = await supabase.auth.verifyOtp({
         email: normalized,
-        token,
-        type: 'recovery',
+        token: otp,
+        type,
       });
+      if (!result.error && result.data.session) {
+        return result.data.session;
+      }
+      lastError = result.error;
     }
-    if (result.error) throw result.error;
-    return result.data.session;
+    if (lastError) throw lastError;
+    throw new Error('Could not verify that code.');
   }, []);
 
   const signOut = useCallback(async () => {

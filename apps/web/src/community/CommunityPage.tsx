@@ -53,6 +53,7 @@ import {
   uploadProfilePhotoFile,
 } from '../lib/globalCommunity';
 import { PhotoAdjust } from './PhotoAdjust';
+import { verifyEmailOtp } from '../lib/auth';
 import { isValidEmail, normalizeEmail } from '../lib/email';
 import { supabase } from '../lib/supabase';
 import './community.css';
@@ -154,21 +155,9 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
   const verify = async () => {
     setLoading(true);
     setError('');
-    const normalized = normalizeEmail(email);
-    let { error: err } = await supabase.auth.verifyOtp({
-      email: normalized,
-      token: otp,
-      type: 'email',
-    });
-    if (err) {
-      ({ error: err } = await supabase.auth.verifyOtp({
-        email: normalized,
-        token: otp,
-        type: 'recovery',
-      }));
-    }
+    const { error: verifyError } = await verifyEmailOtp(email, otp);
     setLoading(false);
-    if (err) setError(err.message);
+    if (verifyError) setError(verifyError);
     else onAuthed();
   };
 
@@ -222,7 +211,7 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
             <button
               type="button"
               className="community-btn"
-              disabled={loading}
+              disabled={loading || otp.replace(/\D/g, '').length < 6}
               aria-busy={loading}
               onClick={() => void verify()}>
               {loading ? (
@@ -233,6 +222,14 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
               ) : (
                 'Verify & join'
               )}
+            </button>
+            <button
+              type="button"
+              className="community-link-btn"
+              style={{ marginTop: 12 }}
+              disabled={loading}
+              onClick={() => void sendOtp()}>
+              Resend code
             </button>
           </>
         )}
