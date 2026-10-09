@@ -378,6 +378,12 @@ export async function saveWebCommunityProfile(input: {
 
   if (error) {
     console.error('saveWebCommunityProfile', error);
+    if (error.code === '42501') {
+      return (
+        'Database permissions are missing on the hosted Supabase project. ' +
+        'Run supabase/migrations/20251009180000_grant_global_community_api.sql in the SQL Editor, then try again.'
+      );
+    }
     return error.message;
   }
   return null;

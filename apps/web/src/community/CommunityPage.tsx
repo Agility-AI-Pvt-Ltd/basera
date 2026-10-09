@@ -136,13 +136,10 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
     setLoading(true);
     setError('');
     const normalized = normalizeEmail(email);
+    // OTP-only sign-in: do not set emailRedirectTo — it adds magic links that prefetchers can burn.
     const { error: err } = await supabase.auth.signInWithOtp({
       email: normalized,
-      options: {
-        shouldCreateUser: true,
-        // Hosted Auth still needs Magic Link template + custom SMTP for OTP mail.
-        emailRedirectTo: `${window.location.origin}/community`,
-      },
+      options: { shouldCreateUser: true },
     });
     setLoading(false);
     if (err) setError(err.message);

@@ -12,8 +12,9 @@ function friendlyVerifyError(error: AuthError | null): string {
 
   if (code === 'otp_expired' || /expired|invalid/i.test(msg)) {
     return (
-      'That code is invalid or expired. Request a new OTP and enter it within a few minutes. ' +
-      'If your email also has a “Confirm” button, use only the 6-digit code here — do not open that link first.'
+      'That code is invalid or expired. Tap Resend code, then enter the new 6-digit number within a few minutes. ' +
+      'Use the email whose subject is “Your Basera sign-in code” — not “Confirm your email address”. ' +
+      'Do not click any link in the email before entering the code (Gmail/Outlook preview can invalidate it).'
     );
   }
   if (error.status === 403) {
