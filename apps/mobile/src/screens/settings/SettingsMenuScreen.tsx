@@ -29,7 +29,7 @@ export default function SettingsMenuScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const { profile } = useUserProfile();
-  const { phone, signOut } = useAuthStatus();
+  const { email, signOut } = useAuthStatus();
 
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -104,7 +104,7 @@ export default function SettingsMenuScreen() {
       <View style={styles.profileCard}>
         <UserAvatar photoUri={profile?.photoUri} size={72} />
         <Text style={styles.name}>{profile?.name || 'Your profile'}</Text>
-        <Text style={styles.phone}>{phone || '—'}</Text>
+        <Text style={styles.phone}>{email || '—'}</Text>
         {profile?.city ? (
           <Text style={styles.location}>
             {profile.locality ? `${profile.locality}, ` : ''}

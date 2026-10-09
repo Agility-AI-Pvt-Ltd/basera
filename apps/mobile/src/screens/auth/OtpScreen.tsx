@@ -22,7 +22,7 @@ import { FONT_FAMILY } from '@/constants/Fonts';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import type { AuthStackParamList } from '@/src/navigation/types';
-import { isValidIndianMobile, maskIndianMobile } from '@/utils/phone';
+import { isValidEmail, maskEmail } from '@/utils/email';
 
 const BRAND_PURPLE = '#7C3AED';
 const OTP_LENGTH = 6;
@@ -40,7 +40,7 @@ type OtpRoute = RouteProp<AuthStackParamList, 'Otp'>;
 export default function OtpScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<OtpRoute>();
-  const phone = params?.phone ?? '';
+  const email = params?.email ?? '';
   const { sendOtp, verifyOtp } = useAuthStatus();
   const { refreshProfile } = useUserProfile();
 
@@ -52,15 +52,15 @@ export default function OtpScreen() {
 
   const enteredCode = useMemo(() => otp.join(''), [otp]);
   const isComplete = enteredCode.length === OTP_LENGTH;
-  const phoneInvalid = !isValidIndianMobile(phone);
+  const emailInvalid = !isValidEmail(email);
 
   useEffect(() => {
-    if (phoneInvalid) {
-      navigation.navigate('Phone');
+    if (emailInvalid) {
+      navigation.navigate('Email');
     }
-  }, [phoneInvalid, navigation]);
+  }, [emailInvalid, navigation]);
 
-  if (phoneInvalid) {
+  if (emailInvalid) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={BRAND_PURPLE} />
@@ -90,7 +90,7 @@ export default function OtpScreen() {
     setResending(true);
     setError('');
     try {
-      await sendOtp(phone);
+      await sendOtp(email);
       setOtp(Array(OTP_LENGTH).fill(''));
       inputsRef.current[0]?.focus();
     } catch (err) {
@@ -107,9 +107,8 @@ export default function OtpScreen() {
     setError('');
 
     try {
-      await verifyOtp(phone, enteredCode);
+      await verifyOtp(email, enteredCode);
       await refreshProfile();
-      // App.tsx gate switches to SignupStack or MainTabs on session change.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Incorrect or expired code');
     } finally {
@@ -129,11 +128,11 @@ export default function OtpScreen() {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.backRow}>
-          <BackButton onFallback={() => navigation.navigate('Phone')} />
+          <BackButton onFallback={() => navigation.navigate('Email')} />
         </View>
 
-        <Text style={styles.title}>Enter the code from phone number</Text>
-        <Text style={styles.subtitle}>Code sent to {maskIndianMobile(phone)}</Text>
+        <Text style={styles.title}>Enter the code from your email</Text>
+        <Text style={styles.subtitle}>Code sent to {maskEmail(email)}</Text>
 
         <View style={styles.otpRow}>
           {otp.map((digit, index) => (
@@ -154,7 +153,7 @@ export default function OtpScreen() {
           ))}
         </View>
 
-        <Pressable onPress={handleResend} disabled={resending || loading}>
+        <Pressable onPress={() => void handleResend()} disabled={resending || loading}>
           <Text style={[styles.resend, (resending || loading) && styles.resendDisabled]}>
             {resending ? 'Sending…' : 'Get a new code'}
           </Text>
@@ -163,7 +162,7 @@ export default function OtpScreen() {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <Pressable
-          onPress={handleContinue}
+          onPress={() => void handleContinue()}
           disabled={!isComplete || loading}
           style={({ pressed }) => [
             styles.button,

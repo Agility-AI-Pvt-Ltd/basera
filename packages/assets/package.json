@@ -1,0 +1,28 @@
+{
+  "name": "@basera/assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared Basera images and media for web, mobile, and admin",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./native": "./src/native.ts",
+    "./web": "./src/web.ts",
+    "./images/*": "./images/*",
+    "./icon/*": "./icon/*"
+  },
+  "files": [
+    "icon",
+    "images",
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.32.1",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

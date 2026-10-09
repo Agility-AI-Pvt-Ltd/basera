@@ -19,24 +19,24 @@ import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
-import { isValidIndianMobile } from '@/utils/phone';
 import type { AuthStackParamList } from '@/src/navigation/types';
+import { isValidEmail, normalizeEmail } from '@/utils/email';
 
 const BRAND_PURPLE = '#7C3AED';
 
-type Nav = NativeStackNavigationProp<AuthStackParamList, 'Phone'>;
+type Nav = NativeStackNavigationProp<AuthStackParamList, 'Email'>;
 
-export default function PhoneScreen() {
+export default function EmailScreen() {
   const navigation = useNavigation<Nav>();
   const { sendOtp } = useAuthStatus();
   const { hasCompleted, completeOnboarding, resetOnboarding } = useOnboardingStatus();
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const isValid = useMemo(() => isValidIndianMobile(phone), [phone]);
-  const showError = touched && phone.length > 0 && !isValid;
+  const isValid = useMemo(() => isValidEmail(email), [email]);
+  const showError = touched && email.length > 0 && !isValid;
 
   const handleBackToCarousel = async () => {
     await resetOnboarding();
@@ -55,8 +55,9 @@ export default function PhoneScreen() {
         await completeOnboarding();
       }
 
-      await sendOtp(phone);
-      navigation.navigate('Otp', { phone });
+      const normalized = normalizeEmail(email);
+      await sendOtp(normalized);
+      navigation.navigate('Otp', { email: normalized });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send verification code');
     } finally {
@@ -80,49 +81,40 @@ export default function PhoneScreen() {
         </View>
         <Text style={styles.brand}>Basera.</Text>
 
-        <Text style={styles.title}>Let&apos;s get started with your phone number</Text>
+        <Text style={styles.title}>Let&apos;s get started with your email</Text>
         <Text style={styles.subtitle}>
-          Enter your phone number to continue. We&apos;ll send you a quick verification
-          code.
+          Enter your email to continue. We&apos;ll send you a quick verification code.
         </Text>
 
-        <View style={styles.row}>
-          <View style={[styles.field, styles.countryField]}>
-            <Text style={styles.fieldLabel}>Country</Text>
-            <View style={styles.countryValue}>
-              <Text style={styles.flag}>🇮🇳</Text>
-              <Text style={styles.countryCode}>+91</Text>
-            </View>
-          </View>
-
-          <View style={[styles.field, styles.phoneField, showError && styles.fieldError]}>
-            <Text style={styles.fieldLabel}>Phone number</Text>
-            <TextInput
-              value={phone}
-              onChangeText={(value) => {
-                const digits = value.replace(/\D/g, '').slice(0, 10);
-                setPhone(digits);
-                setError('');
-              }}
-              onBlur={() => setTouched(true)}
-              keyboardType="number-pad"
-              maxLength={10}
-              placeholder="9876543210"
-              placeholderTextColor="#9CA3AF"
-              style={styles.input}
-              autoFocus
-              editable={!loading}
-            />
-          </View>
+        <View style={[styles.field, showError && styles.fieldError]}>
+          <Text style={styles.fieldLabel}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={(value) => {
+              setEmail(value);
+              setError('');
+            }}
+            onBlur={() => setTouched(true)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            placeholder="you@example.com"
+            placeholderTextColor="#9CA3AF"
+            style={styles.input}
+            autoFocus
+            editable={!loading}
+          />
         </View>
 
         {showError ? (
-          <Text style={styles.errorText}>Enter a valid 10-digit Indian mobile number</Text>
+          <Text style={styles.errorText}>Enter a valid email address</Text>
         ) : null}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <Pressable
-          onPress={handleContinue}
+          onPress={() => void handleContinue()}
           disabled={!isValid || loading}
           style={({ pressed }) => [
             styles.button,
@@ -181,11 +173,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginBottom: 28,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
-  },
   field: {
     borderWidth: 1.5,
     borderColor: '#D1D5DB',
@@ -194,15 +181,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 12,
     backgroundColor: '#FFFFFF',
+    marginBottom: 8,
   },
   fieldError: {
     borderColor: '#EF4444',
-  },
-  countryField: {
-    width: 110,
-  },
-  phoneField: {
-    flex: 1,
   },
   fieldLabel: {
     position: 'absolute',
@@ -212,21 +194,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     fontSize: 12,
     color: '#6B7280',
-  },
-  countryValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  flag: {
-    fontSize: 18,
-  },
-  countryCode: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 16,
-    fontWeight: '200',
-    color: '#111827',
   },
   input: {
     fontFamily: FONT_FAMILY,

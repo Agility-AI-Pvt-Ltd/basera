@@ -26,7 +26,7 @@ export const SUGGESTED_PACKS: SuggestedPack[] = [
   },
 ];
 
-/** Demo pin coordinates by city name (approx). */
+/** Demo pin coordinates by city name (approx) — manual pin drop only. */
 export const CITY_PIN_PRESETS: Record<string, { latitude: number; longitude: number }> = {
   Bengaluru: { latitude: 12.9716, longitude: 77.5946 },
   Bangalore: { latitude: 12.9716, longitude: 77.5946 },
@@ -35,6 +35,8 @@ export const CITY_PIN_PRESETS: Record<string, { latitude: number; longitude: num
   Hyderabad: { latitude: 17.385, longitude: 78.4867 },
   Chennai: { latitude: 13.0827, longitude: 80.2707 },
   Pune: { latitude: 18.5204, longitude: 73.8567 },
+  Noida: { latitude: 28.5355, longitude: 77.391 },
+  Gurugram: { latitude: 28.4595, longitude: 77.0266 },
 };
 
 export const DEFAULT_PIN = { latitude: 12.9716, longitude: 77.5946 };

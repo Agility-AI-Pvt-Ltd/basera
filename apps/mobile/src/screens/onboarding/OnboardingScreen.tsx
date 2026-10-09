@@ -18,8 +18,8 @@ export default function OnboardingScreen() {
   const handleComplete = useCallback(async () => {
     await completeOnboarding();
     const routeNames = navigation.getState()?.routeNames ?? [];
-    if (routeNames.includes('Phone')) {
-      navigation.navigate('Phone');
+    if (routeNames.includes('Email')) {
+      navigation.navigate('Email');
     }
   }, [completeOnboarding, navigation]);
 

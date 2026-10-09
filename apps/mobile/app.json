@@ -42,7 +42,14 @@
           "photosPermission": "Allow Basera to access your photos for your profile picture.",
           "cameraPermission": "Allow Basera to use the camera for your profile picture."
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Basera uses your location to set your city and map pin for packs and meetups near you."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "reactCompiler": true

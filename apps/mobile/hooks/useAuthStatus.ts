@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase';
-import { fromE164Indian, toE164Indian } from '@/utils/phone';
+import { normalizeEmail } from '@/utils/email';
 
 export function useAuthStatus() {
   const [isReady, setIsReady] = useState(false);
@@ -24,21 +24,31 @@ export function useAuthStatus() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const sendOtp = useCallback(async (phone: string) => {
+  const sendOtp = useCallback(async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
-      phone: toE164Indian(phone),
+      email: normalizeEmail(email),
+      options: { shouldCreateUser: true },
     });
     if (error) throw error;
   }, []);
 
-  const verifyOtp = useCallback(async (phone: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone: toE164Indian(phone),
+  const verifyOtp = useCallback(async (email: string, token: string) => {
+    const normalized = normalizeEmail(email);
+    // Local GoTrue often sends recovery mail for signInWithOtp; try both types.
+    let result = await supabase.auth.verifyOtp({
+      email: normalized,
       token,
-      type: 'sms',
+      type: 'email',
     });
-    if (error) throw error;
-    return data.session;
+    if (result.error) {
+      result = await supabase.auth.verifyOtp({
+        email: normalized,
+        token,
+        type: 'recovery',
+      });
+    }
+    if (result.error) throw result.error;
+    return result.data.session;
   }, []);
 
   const signOut = useCallback(async () => {
@@ -47,13 +57,13 @@ export function useAuthStatus() {
     setSession(null);
   }, []);
 
-  const phone = fromE164Indian(session?.user.phone);
+  const email = session?.user.email?.trim().toLowerCase() ?? '';
 
   return {
     isReady,
     isAuthenticated: session !== null,
     session,
-    phone,
+    email,
     sendOtp,
     verifyOtp,
     signOut,

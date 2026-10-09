@@ -1,8 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import OnboardingScreen from '@/src/screens/onboarding/OnboardingScreen';
+import EmailScreen from '@/src/screens/auth/EmailScreen';
 import OtpScreen from '@/src/screens/auth/OtpScreen';
-import PhoneScreen from '@/src/screens/auth/PhoneScreen';
 
 import type { AuthStackParamList } from './types';
 
@@ -18,7 +18,7 @@ export function AuthStack({ initialRouteName = 'Onboarding' }: AuthStackProps) {
       initialRouteName={initialRouteName}
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      <Stack.Screen name="Phone" component={PhoneScreen} />
+      <Stack.Screen name="Email" component={EmailScreen} />
       <Stack.Screen name="Otp" component={OtpScreen} />
     </Stack.Navigator>
   );

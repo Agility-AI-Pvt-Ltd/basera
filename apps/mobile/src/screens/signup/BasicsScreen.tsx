@@ -1,7 +1,7 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import type { SignupStackParamList } from '@/src/navigation/types';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -22,9 +22,22 @@ import { FONT_FAMILY } from '@/constants/Fonts';
 import { CITY_PIN_PRESETS, DEFAULT_PIN } from '@/constants/signup';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { detectSignupLocation } from '@/lib/signupLocation';
 import type { LocalityPin } from '@/types/profile';
 
 type Nav = NativeStackNavigationProp<SignupStackParamList, 'Basics'>;
+
+function resolveLocalityPin(cityName: string, existing: LocalityPin | null): LocalityPin {
+  if (existing) return existing;
+  const matched = Object.entries(CITY_PIN_PRESETS).find(
+    ([key]) => key.toLowerCase() === cityName.trim().toLowerCase(),
+  );
+  const coords = matched?.[1] ?? DEFAULT_PIN;
+  return {
+    latitude: coords.latitude + (Math.random() - 0.5) * 0.02,
+    longitude: coords.longitude + (Math.random() - 0.5) * 0.02,
+  };
+}
 
 export default function BasicsScreen() {
   const navigation = useNavigation<Nav>();
@@ -40,6 +53,9 @@ export default function BasicsScreen() {
   const [showOptional, setShowOptional] = useState(false);
   const [error, setError] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationNote, setLocationNote] = useState('');
+  const autoLocateAttempted = useRef(false);
 
   useEffect(() => {
     if (!profile || hydrated) return;
@@ -52,14 +68,43 @@ export default function BasicsScreen() {
     setHydrated(true);
   }, [profile, hydrated]);
 
+  const applyDetectedLocation = useCallback(async (manual = false) => {
+    setLocating(true);
+    setError('');
+    if (manual) setLocationNote('');
+    const result = await detectSignupLocation();
+    setLocating(false);
+    if (!result.ok) {
+      if (result.pin) {
+        setPin(result.pin);
+      }
+      setLocationNote(result.message);
+      if (manual) setError(result.message);
+      return;
+    }
+    const { pin: nextPin, city: nextCity, locality: nextLocality, label } = result.data;
+    setCity(nextCity);
+    setLocality(nextLocality);
+    setPin(nextPin);
+    setLocationNote(label);
+    setError('');
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || autoLocateAttempted.current) return;
+    const needsLocation = !city.trim() || !locality.trim();
+    if (!needsLocation) return;
+    autoLocateAttempted.current = true;
+    void applyDetectedLocation(false);
+  }, [hydrated, city, locality, applyDetectedLocation]);
+
   const canContinue = useMemo(
     () =>
       name.trim().length >= 2 &&
       isAdult &&
       locality.trim().length >= 2 &&
-      city.trim().length >= 2 &&
-      pin !== null,
-    [name, isAdult, locality, city, pin],
+      city.trim().length >= 2,
+    [name, isAdult, locality, city],
   );
 
   if (!authReady || !isReady) {
@@ -70,31 +115,20 @@ export default function BasicsScreen() {
     );
   }
 
-  const dropPin = () => {
-    const matched = Object.entries(CITY_PIN_PRESETS).find(
-      ([key]) => key.toLowerCase() === city.trim().toLowerCase(),
-    );
-    const coords = matched?.[1] ?? DEFAULT_PIN;
-    // Slight jitter so each pin feels locality-specific
-    setPin({
-      latitude: coords.latitude + (Math.random() - 0.5) * 0.02,
-      longitude: coords.longitude + (Math.random() - 0.5) * 0.02,
-    });
-    setError('');
-  };
-
   const handleContinue = async () => {
-    if (!canContinue || !pin) {
-      setError('Fill name, confirm 18+, city, locality, and drop a map pin.');
+    if (!canContinue) {
+      setError('Fill name, confirm 18+, city, and locality.');
       return;
     }
+
+    const localityPin = resolveLocalityPin(city, pin);
 
     await updateProfile({
       name: name.trim(),
       isAdult: true,
       locality: locality.trim(),
       city: city.trim(),
-      localityPin: pin,
+      localityPin,
       bio: bio.trim() || undefined,
     });
 
@@ -137,13 +171,39 @@ export default function BasicsScreen() {
         <Text style={styles.checkboxLabel}>I confirm I am 18 years or older</Text>
       </Pressable>
 
+      <View style={styles.locationBanner}>
+        <View style={styles.locationBannerText}>
+          <Text style={styles.locationBannerTitle}>Your area</Text>
+          {locating ? (
+            <Text style={styles.locationBannerHint}>Getting GPS location…</Text>
+          ) : locationNote ? (
+            <Text style={styles.locationBannerHint}>{locationNote}</Text>
+          ) : (
+            <Text style={styles.locationBannerHint}>
+              We use GPS and reverse geocoding for your city and locality.
+            </Text>
+          )}
+        </View>
+        <Pressable
+          style={[styles.locateBtn, locating && styles.locateBtnDisabled]}
+          disabled={locating}
+          onPress={() => void applyDetectedLocation(true)}>
+          {locating ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <FontAwesome name="location-arrow" size={16} color="#FFFFFF" />
+          )}
+          <Text style={styles.locateBtnText}>{locating ? 'Locating' : 'Refresh'}</Text>
+        </Pressable>
+      </View>
+
       <View style={styles.field}>
         <Text style={styles.label}>City</Text>
         <TextInput
           value={city}
           onChangeText={(value) => {
             setCity(value);
-            setPin(null);
+            setLocationNote('');
           }}
           placeholder="e.g. Bengaluru"
           placeholderTextColor="#9CA3AF"
@@ -162,32 +222,6 @@ export default function BasicsScreen() {
           style={styles.input}
           autoCapitalize="words"
         />
-      </View>
-
-      <View style={styles.mapCard}>
-        <View style={styles.mapHeader}>
-          <Text style={styles.mapTitle}>Map pin</Text>
-          <Text style={styles.mapHint}>Required — packs & meetups are locality-first</Text>
-        </View>
-        <View style={styles.mapPreview}>
-          <View style={styles.mapGrid} />
-          {pin ? (
-            <View style={styles.pinMarker}>
-              <FontAwesome name="map-marker" size={36} color={BRAND_PURPLE} />
-            </View>
-          ) : (
-            <Text style={styles.mapEmpty}>No pin yet</Text>
-          )}
-        </View>
-        <PrimaryButton
-          label={pin ? 'Update pin for this city' : 'Drop pin on map'}
-          onPress={dropPin}
-        />
-        {pin ? (
-          <Text style={styles.coords}>
-            Pin set · {pin.latitude.toFixed(4)}, {pin.longitude.toFixed(4)}
-          </Text>
-        ) : null}
       </View>
 
       {showOptional ? (
@@ -279,49 +313,46 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#111827',
   },
-  mapCard: {
+  locationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    borderRadius: 16,
-    padding: 14,
-    backgroundColor: '#FAFAFA',
+    borderColor: '#DDD6FE',
+    borderRadius: 14,
+    padding: 12,
+    backgroundColor: '#F5F3FF',
   },
-  mapHeader: {
+  locationBannerText: {
+    flex: 1,
     gap: 2,
   },
-  mapTitle: {
-    fontSize: 16,
+  locationBannerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#111827',
   },
-  mapHint: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  mapPreview: {
-    height: 140,
-    borderRadius: 12,
-    backgroundColor: '#E0E7FF',
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapGrid: {
-    ...StyleSheet.absoluteFill,
-    opacity: 0.25,
-    backgroundColor: '#C7D2FE',
-  },
-  pinMarker: {
-    zIndex: 1,
-  },
-  mapEmpty: {
-    color: '#6B7280',
-    fontSize: 14,
-  },
-  coords: {
+  locationBannerHint: {
     fontSize: 12,
     color: '#6B7280',
-    textAlign: 'center',
+    lineHeight: 16,
+  },
+  locateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: BRAND_PURPLE,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 999,
+  },
+  locateBtnDisabled: {
+    opacity: 0.85,
+  },
+  locateBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
   optional: {
     gap: 12,

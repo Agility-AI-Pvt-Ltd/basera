@@ -1,7 +1,7 @@
 export type AuthStackParamList = {
   Onboarding: undefined;
-  Phone: undefined;
-  Otp: { phone: string };
+  Email: undefined;
+  Otp: { email: string };
 };
 
 export type SignupStackParamList = {

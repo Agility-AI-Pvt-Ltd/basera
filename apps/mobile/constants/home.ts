@@ -1,15 +1,32 @@
+import { HOME_IMAGES } from '@basera/assets/native';
 import type { ImageSourcePropType } from 'react-native';
-
-import { HOME_IMAGES } from '../assets/images/home/manifest';
 
 export { HOME_IMAGES };
 
 export const BRAND_PURPLE = '#A78BFA';
 export const BRAND_PURPLE_DARK = '#7C3AED';
+export const BRAND_PURPLE_LIGHT = '#EDE9FE';
 
 export type Category = {
   id: string;
   label: string;
+  image?: ImageSourcePropType;
+  icon?: 'paw';
+};
+
+export type FeaturedPet = {
+  id: string;
+  breed: string;
+  distance: string;
+  image: ImageSourcePropType;
+  gender: 'male' | 'female';
+  age: string;
+  trait: string;
+};
+
+export type NearbyPet = {
+  id: string;
+  name: string;
   image: ImageSourcePropType;
 };
 
@@ -26,30 +43,45 @@ export const CATEGORIES: Category[] = [
   { id: 'cats', label: 'Cats', image: HOME_IMAGES.categories.cats },
   { id: 'birds', label: 'Birds', image: HOME_IMAGES.categories.birds },
   { id: 'fishes', label: 'Fishes', image: HOME_IMAGES.categories.fishes },
+  { id: 'rabbits', label: 'Rabbits', image: HOME_IMAGES.categories.rabbits },
+  { id: 'others', label: 'Others', icon: 'paw' },
 ];
 
-export const FEATURED_PETS: PetCard[] = [
+export const FEATURED_PETS: FeaturedPet[] = [
   {
     id: '1',
-    name: 'Golden Retriever',
     breed: 'Golden Retriever',
-    distance: 'Near 15km',
+    distance: '2 km away',
     image: HOME_IMAGES.pets.goldenRetriever,
+    gender: 'male',
+    age: '2 years',
+    trait: 'Friendly',
   },
   {
     id: '2',
-    name: 'Labrador',
     breed: 'Labrador',
-    distance: 'Near 8km',
+    distance: '3 km away',
     image: HOME_IMAGES.pets.labrador,
+    gender: 'female',
+    age: '1 year',
+    trait: 'Playful',
   },
   {
     id: '3',
-    name: 'Beagle',
     breed: 'Beagle',
-    distance: 'Near 12km',
+    distance: '5 km away',
     image: HOME_IMAGES.pets.beagle,
+    gender: 'male',
+    age: '3 years',
+    trait: 'Calm',
   },
+];
+
+export const NEARBY_PETS: NearbyPet[] = [
+  { id: 'n1', name: 'Beagle', image: HOME_IMAGES.pets.beagle },
+  { id: 'n2', name: 'Persian Cat', image: HOME_IMAGES.categories.cats },
+  { id: 'n3', name: 'Parakeet', image: HOME_IMAGES.categories.birds },
+  { id: 'n4', name: 'Rabbit', image: HOME_IMAGES.pets.poodle },
 ];
 
 export const SAVED_PETS: PetCard[] = [

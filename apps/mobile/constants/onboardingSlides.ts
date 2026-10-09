@@ -1,10 +1,10 @@
 import type { FC } from 'react';
 import type { SvgProps } from 'react-native-svg';
 
-import AdoptionImage from '@/assets/images/onboarding/adoption.svg';
-import MeetupsImage from '@/assets/images/onboarding/meetups.svg';
-import PacksImage from '@/assets/images/onboarding/packs.svg';
-import TrustImage from '@/assets/images/onboarding/trust.svg';
+import AdoptionImage from '@basera/assets/images/onboarding/adoption.svg';
+import MeetupsImage from '@basera/assets/images/onboarding/meetups.svg';
+import PacksImage from '@basera/assets/images/onboarding/packs.svg';
+import TrustImage from '@basera/assets/images/onboarding/trust.svg';
 
 export type OnboardingSlide = {
   id: string;

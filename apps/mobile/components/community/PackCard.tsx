@@ -1,12 +1,15 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
+import { CoverImage } from '@/components/CoverImage';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
-import { formatDistanceKm } from '@/lib/geo';
 import type { CommunityPack } from '@/types/community';
-import { PACK_CATEGORY_OPTIONS } from '@/types/community';
+
+import { formatDistanceShort, packCoverSource } from './packCover';
 
 const BRAND = '#7C3AED';
+const BRAND_LIGHT = '#EDE9FE';
 
 type Props = {
   pack: CommunityPack;
@@ -15,81 +18,132 @@ type Props = {
   compact?: boolean;
 };
 
-export function PackCard({ pack, onPress, onJoin, compact }: Props) {
-  const cat = PACK_CATEGORY_OPTIONS.find((c) => c.id === pack.category);
+export function PackCard({ pack, onPress, onJoin }: Props) {
+  const showMenu = () => {
+    Alert.alert(pack.name, undefined, [
+      { text: 'View pack', onPress },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
   return (
-    <Pressable style={[styles.card, compact && styles.cardCompact]} onPress={onPress}>
-      <View style={styles.emojiWrap}>
-        <Text style={styles.emoji}>{cat?.emoji ?? '🐾'}</Text>
-      </View>
+    <Pressable style={styles.card} onPress={onPress}>
+      <CoverImage source={packCoverSource(pack)} style={styles.thumb} borderRadius={14} />
       <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={2}>
+        <Text style={styles.name} numberOfLines={1}>
           {pack.name}
         </Text>
-        <Text style={styles.meta}>
-          {formatDistanceKm(pack.distanceKm)} · {pack.memberCount} members
-        </Text>
-        {!compact && pack.description ? (
-          <Text style={styles.desc} numberOfLines={2}>
-            {pack.description}
+        <View style={styles.metaRow}>
+          <Feather name="map-pin" size={12} color={BRAND} style={styles.metaIcon} />
+          <Text style={styles.metaText} numberOfLines={1}>
+            {formatDistanceShort(pack.distanceKm)} · {pack.memberCount} members
           </Text>
-        ) : null}
+        </View>
+        <Text style={styles.desc} numberOfLines={1}>
+          {pack.description || `Weekly walks and playdates in ${pack.area || pack.city}.`}
+        </Text>
       </View>
-      {onJoin && !pack.isMember ? (
+      <View style={styles.actions}>
+        {pack.isMember ? (
+          <View style={styles.joinedBtn}>
+            <Text style={styles.joinedText}>Joined</Text>
+          </View>
+        ) : onJoin ? (
+          <Pressable
+            style={styles.joinBtn}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onJoin();
+            }}>
+            <Text style={styles.joinText}>Join</Text>
+          </Pressable>
+        ) : null}
         <Pressable
-          style={styles.joinBtn}
+          style={styles.menuBtn}
           onPress={(e) => {
             e.stopPropagation?.();
-            onJoin();
-          }}>
-          <Text style={styles.joinText}>Join</Text>
+            showMenu();
+          }}
+          accessibilityLabel="More options">
+          <Feather name="more-vertical" size={18} color="#9CA3AF" />
         </Pressable>
-      ) : pack.isMember ? (
-        <Text style={styles.joined}>Joined</Text>
-      ) : null}
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  cardCompact: { paddingVertical: 12 },
-  emojiWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#F5F3FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+  thumb: {
+    width: 64,
+    height: 64,
     marginRight: 12,
+    flexShrink: 0,
   },
-  emoji: { fontSize: 22 },
-  body: { flex: 1 },
+  body: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+    paddingRight: 8,
+    justifyContent: 'center',
+  },
   name: {
     fontFamily: FONT_FAMILY,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#111827',
   },
-  meta: { marginTop: 4, fontSize: 13, color: '#6B7280' },
-  desc: { marginTop: 6, fontSize: 13, color: '#4B5563', lineHeight: 18 },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexShrink: 1,
+  },
+  metaIcon: { flexShrink: 0 },
+  metaText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  desc: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginLeft: 6,
+    flexShrink: 0,
+  },
   joinBtn: {
     backgroundColor: BRAND,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 8,
+    borderRadius: 999,
   },
-  joinText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
-  joined: { marginLeft: 8, fontSize: 12, color: BRAND, fontWeight: '600' },
+  joinText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  joinedBtn: {
+    backgroundColor: BRAND_LIGHT,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  joinedText: { color: BRAND, fontSize: 13, fontWeight: '700' },
+  menuBtn: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -100,7 +100,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
   return (
     <View
-      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) + 16 }]}
       pointerEvents="box-none">
       <View style={[styles.shadow, { width: barWidth }]}>
         <View style={[styles.bar, { width: barWidth, height: BAR_HEIGHT }]}>

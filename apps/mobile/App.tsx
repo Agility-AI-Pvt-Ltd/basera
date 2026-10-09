@@ -89,7 +89,7 @@ function RootNavigator() {
       </View>
     );
   } else if (!session) {
-    content = <AuthStack initialRouteName={hasCompleted ? 'Phone' : 'Onboarding'} />;
+    content = <AuthStack initialRouteName={hasCompleted ? 'Email' : 'Onboarding'} />;
   } else if (!hasCompleted) {
     content = <OnboardingStack />;
   } else if (!isSignupComplete && isReady) {

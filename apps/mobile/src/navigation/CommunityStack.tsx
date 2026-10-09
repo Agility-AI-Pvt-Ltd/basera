@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import CommunityScreen from '@/src/screens/community/CommunityScreen';
+import GlobalCommunityScreen from '@/src/screens/community/GlobalCommunityScreen';
 import CreateMeetupScreen from '@/src/screens/community/CreateMeetupScreen';
 import CreatePackScreen from '@/src/screens/community/CreatePackScreen';
 import MeetupDetailScreen from '@/src/screens/community/MeetupDetailScreen';
@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator<CommunityStackParamList>();
 export function CommunityStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Community" component={CommunityScreen} />
+      <Stack.Screen name="Community" component={GlobalCommunityScreen} />
       <Stack.Screen name="PackDetail" component={PackDetailScreen} />
       <Stack.Screen name="CreatePack" component={CreatePackScreen} />
       <Stack.Screen name="MeetupDetail" component={MeetupDetailScreen} />

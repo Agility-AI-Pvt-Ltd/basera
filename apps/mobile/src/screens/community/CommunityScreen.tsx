@@ -1,7 +1,8 @@
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,23 +18,29 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MeetupCard } from '@/components/community/MeetupCard';
 import { NeighborCard } from '@/components/community/NeighborCard';
 import { PackCard } from '@/components/community/PackCard';
+import { RecommendedPackCard } from '@/components/community/RecommendedPackCard';
+import { CoverImage } from '@/components/CoverImage';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
+import { HOME_IMAGES } from '@/constants/home';
 import { joinPack, useCommunityDiscovery } from '@/hooks/useCommunity';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { formatDistanceKm } from '@/lib/geo';
 import { supabase } from '@/lib/supabase';
 import type { CommunityStackParamList } from '@/src/navigation/types';
-import type { CommunityTab } from '@/types/community';
+import type { CommunityPack, CommunityTab } from '@/types/community';
 
 type Nav = NativeStackNavigationProp<CommunityStackParamList, 'Community'>;
 
 const BRAND = '#7C3AED';
-const TABS: { id: CommunityTab; label: string }[] = [
-  { id: 'packs', label: 'Packs' },
-  { id: 'meetups', label: 'Meetups' },
-  { id: 'neighbors', label: 'Neighbors' },
-];
+const BRAND_LIGHT = '#EDE9FE';
+const H_PADDING = 20;
+
+const TABS: { id: CommunityTab; label: string; icon: ComponentProps<typeof Feather>['name'] }[] =
+  [
+    { id: 'packs', label: 'Packs', icon: 'users' },
+    { id: 'meetups', label: 'Meetups', icon: 'calendar' },
+    { id: 'neighbors', label: 'Neighbors', icon: 'map-pin' },
+  ];
 
 export default function CommunityScreen() {
   const navigation = useNavigation<Nav>();
@@ -55,7 +62,7 @@ export default function CommunityScreen() {
   );
 
   const locationLabel =
-    [profile?.locality, profile?.city].filter(Boolean).join(', ') || 'Set your location';
+    [profile?.locality, profile?.city].filter(Boolean).join(', ') || 'Sector 34, Noida';
 
   const q = search.trim().toLowerCase();
   const filteredPacks = q
@@ -65,6 +72,14 @@ export default function CommunityScreen() {
   const filteredNeighbors = q
     ? neighbors.filter((n) => n.name.toLowerCase().includes(q))
     : neighbors;
+
+  const recommendedPacks = useMemo(() => {
+    const fromFeed = recommended
+      .filter((item): item is { kind: 'pack'; item: CommunityPack; reason: string } => item.kind === 'pack')
+      .map((item) => item.item);
+    if (fromFeed.length > 0) return fromFeed;
+    return packs.slice(0, 6);
+  }, [recommended, packs]);
 
   const handleJoin = useCallback(
     async (packId: string) => {
@@ -79,13 +94,14 @@ export default function CommunityScreen() {
   );
 
   const listHeader = (
-    <>
-      <View style={styles.header}>
-        <View>
+    <View style={styles.headerBlock}>
+      <View style={styles.heroHeader}>
+        <View style={styles.titleBlock}>
           <Text style={styles.title}>Community</Text>
           <Pressable style={styles.locationRow}>
             <Feather name="map-pin" size={14} color={BRAND} />
             <Text style={styles.location}>{locationLabel}</Text>
+            <Feather name="chevron-down" size={14} color="#9CA3AF" />
           </Pressable>
         </View>
         <Pressable
@@ -97,79 +113,87 @@ export default function CommunityScreen() {
           }>
           <Feather name="plus" size={22} color="#FFF" />
         </Pressable>
+        <FontAwesome name="paw" size={22} color="rgba(124, 58, 237, 0.25)" style={styles.heroPaw} />
+        <CoverImage source={HOME_IMAGES.pets.goldenRetriever} style={styles.heroDog} />
+        <CoverImage source={HOME_IMAGES.categories.cats} style={styles.heroCat} />
       </View>
 
       <View style={styles.searchRow}>
-        <Feather name="search" size={18} color="#9CA3AF" />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search communities"
-          placeholderTextColor="#9CA3AF"
-          style={styles.searchInput}
-        />
+        <View style={styles.searchField}>
+          <Feather name="search" size={18} color="#9CA3AF" />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search communities, packs, or topics..."
+            placeholderTextColor="#9CA3AF"
+            style={styles.searchInput}
+          />
+        </View>
+        <Pressable style={styles.filterBtn} accessibilityLabel="Filters">
+          <Feather name="sliders" size={20} color={BRAND} />
+        </Pressable>
       </View>
 
-      <View style={styles.tabRow}>
-        {TABS.map((t) => (
-          <Pressable
-            key={t.id}
-            style={[styles.tab, tab === t.id && styles.tabActive]}
-            onPress={() => setTab(t.id)}>
-            <Text style={[styles.tabText, tab === t.id && styles.tabTextActive]}>{t.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabRow}>
+        {TABS.map((t) => {
+          const active = tab === t.id;
+          return (
+            <Pressable
+              key={t.id}
+              style={[styles.tab, active && styles.tabActive]}
+              onPress={() => setTab(t.id)}>
+              <Feather name={t.icon} size={16} color={active ? '#FFFFFF' : BRAND} />
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>{t.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
-      {!q && recommended.length > 0 ? (
+      {!q && recommendedPacks.length > 0 && tab === 'packs' ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recommended near you</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recommended near you</Text>
+            <Pressable>
+              <Text style={styles.seeAll}>See All ›</Text>
+            </Pressable>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {recommended.map((item) => (
-              <Pressable
-                key={`${item.kind}-${item.kind === 'pack' ? item.item.id : item.kind === 'meetup' ? item.item.id : item.item.userId}`}
-                style={styles.recCard}
-                onPress={() => {
-                  if (item.kind === 'pack') navigation.navigate('PackDetail', { packId: item.item.id });
-                  else if (item.kind === 'meetup')
-                    navigation.navigate('MeetupDetail', { meetupId: item.item.id });
-                  else navigation.navigate('NeighborDetail', { userId: item.item.userId });
-                }}>
-                <Text style={styles.recKind}>
-                  {item.kind === 'pack' ? '🐕 Pack' : item.kind === 'meetup' ? '🌳 Meetup' : '👤 Neighbor'}
-                </Text>
-                <Text style={styles.recTitle} numberOfLines={2}>
-                  {item.kind === 'neighbor'
-                    ? item.item.name
-                    : item.kind === 'pack'
-                      ? item.item.name
-                      : item.item.title}
-                </Text>
-                <Text style={styles.recMeta}>
-                  {item.kind === 'meetup'
-                    ? formatDistanceKm(item.item.distanceKm)
-                    : item.kind === 'pack'
-                      ? formatDistanceKm(item.item.distanceKm)
-                      : formatDistanceKm(item.item.distanceKm)}
-                </Text>
-                <Text style={styles.recReason}>{item.reason}</Text>
-              </Pressable>
+            {recommendedPacks.map((pack) => (
+              <RecommendedPackCard
+                key={pack.id}
+                pack={pack}
+                onPress={() => navigation.navigate('PackDetail', { packId: pack.id })}
+                onJoin={() => void handleJoin(pack.id)}
+              />
             ))}
           </ScrollView>
         </View>
       ) : null}
 
-      <Text style={styles.sectionTitle}>
-        {tab === 'packs' ? 'Packs near you' : tab === 'meetups' ? 'Upcoming near you' : 'Pet parents near you'}
-      </Text>
-    </>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          {tab === 'packs'
+            ? 'Packs near you'
+            : tab === 'meetups'
+              ? 'Upcoming near you'
+              : 'Pet parents near you'}
+        </Text>
+        <Pressable>
+          <Text style={styles.seeAll}>See All ›</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={BRAND} />
+          {listHeader}
+          <ActivityIndicator color={BRAND} style={{ marginTop: 24 }} />
         </View>
       ) : tab === 'packs' ? (
         <FlatList
@@ -181,7 +205,7 @@ export default function CommunityScreen() {
             <PackCard
               pack={item}
               onPress={() => navigation.navigate('PackDetail', { packId: item.id })}
-              onJoin={() => handleJoin(item.id)}
+              onJoin={() => void handleJoin(item.id)}
             />
           )}
           ListEmptyComponent={
@@ -228,23 +252,32 @@ export default function CommunityScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F9FAFB' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  listPad: { paddingHorizontal: 20, paddingBottom: 100 },
-  header: {
+  screen: { flex: 1, backgroundColor: '#F8F7FC' },
+  center: { flex: 1, paddingHorizontal: H_PADDING },
+  listPad: { paddingHorizontal: H_PADDING, paddingBottom: 120 },
+  headerBlock: { paddingBottom: 4 },
+  heroHeader: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 16,
+    minHeight: 88,
   },
+  titleBlock: { flex: 1, zIndex: 2, paddingRight: 100 },
   title: {
     fontFamily: FONT_FAMILY,
     fontSize: 28,
-    fontWeight: '200',
+    fontWeight: '700',
     color: '#111827',
   },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  location: { fontSize: 14, color: '#6B7280' },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  location: { fontSize: 14, fontWeight: '600', color: '#374151' },
   addBtn: {
     width: 44,
     height: 44,
@@ -252,49 +285,101 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 3,
+    shadowColor: BRAND,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  heroPaw: {
+    position: 'absolute',
+    right: 72,
+    top: 4,
+    transform: [{ rotate: '-15deg' }],
+    zIndex: 1,
+  },
+  heroDog: {
+    position: 'absolute',
+    right: 48,
+    top: 0,
+    width: 56,
+    height: 72,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  heroCat: {
+    position: 'absolute',
+    right: 0,
+    top: 16,
+    width: 52,
+    height: 68,
+    borderRadius: 12,
+    zIndex: 1,
   },
   searchRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    gap: 10,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
-  searchInput: { flex: 1, paddingVertical: 12, marginLeft: 8, fontSize: 15, color: '#111827' },
-  tabRow: {
+  searchField: {
+    flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-  },
-  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
-  tabActive: { backgroundColor: '#FFF' },
-  tabText: { fontSize: 14, fontWeight: '500', color: '#6B7280' },
-  tabTextActive: { color: '#111827', fontWeight: '600' },
-  section: { marginBottom: 20 },
-  sectionTitle: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  recCard: {
-    width: 160,
-    backgroundColor: '#FFF',
-    borderRadius: 14,
-    padding: 12,
-    marginRight: 10,
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    height: 50,
     borderWidth: 1,
     borderColor: '#F3F4F6',
   },
-  recKind: { fontSize: 12, color: BRAND, fontWeight: '600' },
-  recTitle: { marginTop: 6, fontSize: 15, fontWeight: '600', color: '#111827', minHeight: 40 },
-  recMeta: { marginTop: 4, fontSize: 12, color: '#6B7280' },
-  recReason: { marginTop: 6, fontSize: 11, color: '#9CA3AF' },
+  searchInput: { flex: 1, fontSize: 14, color: '#111827', padding: 0 },
+  filterBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: BRAND_LIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabRow: {
+    gap: 10,
+    paddingBottom: 18,
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  tabActive: {
+    backgroundColor: BRAND,
+    borderColor: BRAND,
+  },
+  tabText: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  tabTextActive: { color: '#FFFFFF' },
+  section: { marginBottom: 8 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  seeAll: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BRAND,
+  },
   empty: { textAlign: 'center', color: '#6B7280', marginTop: 24, lineHeight: 22 },
 });

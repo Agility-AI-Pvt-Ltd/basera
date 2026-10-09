@@ -1,4 +1,4 @@
-import playstoreImg from '../../../mobile/assets/images/web/playstore.png';
+import { WEB_IMAGES } from '@basera/assets/web';
 
 import { PLAY_STORE_URL } from '../config';
 
@@ -24,7 +24,7 @@ export function HeroSection() {
         rel="noopener noreferrer"
       >
         <img
-          src={playstoreImg}
+          src={WEB_IMAGES.playstore}
           alt="Get it on Google Play"
           width={340}
           height={100}
