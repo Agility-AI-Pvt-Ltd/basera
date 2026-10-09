@@ -41,4 +41,12 @@ export const ASSET_PATHS = {
     packs: 'images/onboarding/packs.svg',
     trust: 'images/onboarding/trust.svg',
   },
+  avatars: {
+    'avatar-01': 'images/avatars/avatar-01.jpg',
+    'avatar-02': 'images/avatars/avatar-02.jpg',
+    'avatar-03': 'images/avatars/avatar-03.jpg',
+    'avatar-04': 'images/avatars/avatar-04.jpg',
+    'avatar-05': 'images/avatars/avatar-05.jpg',
+    'avatar-06': 'images/avatars/avatar-06.jpg',
+  },
 } as const;

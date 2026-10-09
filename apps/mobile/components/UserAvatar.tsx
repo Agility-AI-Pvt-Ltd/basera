@@ -1,3 +1,5 @@
+import { AVATAR_PRESETS } from '@basera/assets/native';
+import { parsePresetAvatarId } from '@basera/shared';
 import { useEffect, useState } from 'react';
 import { ImageSourcePropType } from 'react-native';
 
@@ -16,6 +18,11 @@ export function UserAvatar({ photoUri, size = 44 }: UserAvatarProps) {
   useEffect(() => {
     if (!photoUri) {
       setSource(HOME_IMAGES.avatar);
+      return;
+    }
+    const presetId = parsePresetAvatarId(photoUri);
+    if (presetId) {
+      setSource(AVATAR_PRESETS[presetId] ?? HOME_IMAGES.avatar);
       return;
     }
     if (photoUri.startsWith('http://') || photoUri.startsWith('https://') || photoUri.startsWith('file://')) {

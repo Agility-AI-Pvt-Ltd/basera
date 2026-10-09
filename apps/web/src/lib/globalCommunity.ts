@@ -1,4 +1,12 @@
-import type { GlobalComment, GlobalPost, GlobalPostType } from '@basera/shared';
+import { AVATAR_PRESETS } from '@basera/assets/web';
+import {
+  hasWebCommunityProfile,
+  isPresetAvatarUri,
+  parsePresetAvatarId,
+  type GlobalComment,
+  type GlobalPost,
+  type GlobalPostType,
+} from '@basera/shared';
 
 import { supabase } from './supabase';
 
@@ -16,6 +24,12 @@ function isAbsoluteUri(value: string): boolean {
   );
 }
 
+function resolvePresetAvatarUrl(uri: string): string | null {
+  const id = parsePresetAvatarId(uri);
+  if (!id) return null;
+  return AVATAR_PRESETS[id] ?? null;
+}
+
 function mapAuthor(
   row: ProfileRow | null | undefined,
   fallbackId: string,
@@ -24,7 +38,10 @@ function mapAuthor(
   const key = row?.photo_uri ?? null;
   let photoUri: string | null = null;
   if (key) {
-    photoUri = photoUrls.get(key) ?? (isAbsoluteUri(key) ? key : null);
+    photoUri =
+      photoUrls.get(key) ??
+      resolvePresetAvatarUrl(key) ??
+      (isAbsoluteUri(key) ? key : null);
   }
   return {
     id: fallbackId,
@@ -49,7 +66,7 @@ async function loadProfiles(userIds: string[]): Promise<Map<string, ProfileRow>>
   return map;
 }
 
-/** Profile photos live in private pet-media as storage keys — resolve to signed URLs. */
+/** Profile photos: preset keys, absolute URLs, or private pet-media storage keys. */
 async function resolveProfilePhotoUrls(
   photoKeys: Array<string | null | undefined>,
 ): Promise<Map<string, string>> {
@@ -57,8 +74,16 @@ async function resolveProfilePhotoUrls(
   const storageKeys: string[] = [];
   for (const key of photoKeys) {
     if (!key) continue;
-    if (isAbsoluteUri(key)) urls.set(key, key);
-    else storageKeys.push(key);
+    if (isPresetAvatarUri(key)) {
+      const url = resolvePresetAvatarUrl(key);
+      if (url) urls.set(key, url);
+      continue;
+    }
+    if (isAbsoluteUri(key)) {
+      urls.set(key, key);
+      continue;
+    }
+    storageKeys.push(key);
   }
   const unique = [...new Set(storageKeys)];
   if (unique.length === 0) return urls;
@@ -296,7 +321,7 @@ export async function addComment(
 
 export async function fetchProfilePreview(
   userId: string,
-): Promise<{ name: string; photoUri: string | null } | null> {
+): Promise<{ name: string; photoUri: string | null; ready: boolean } | null> {
   const { data } = await supabase
     .from('profiles')
     .select('id, name, photo_uri')
@@ -307,8 +332,55 @@ export async function fetchProfilePreview(
   const key = (data.photo_uri as string | null) ?? null;
   return {
     name: ((data.name as string) ?? '').trim() || 'You',
-    photoUri: key ? (urls.get(key) ?? (isAbsoluteUri(key) ? key : null)) : null,
+    photoUri: key
+      ? (urls.get(key) ?? resolvePresetAvatarUrl(key) ?? (isAbsoluteUri(key) ? key : null))
+      : null,
+    ready: hasWebCommunityProfile(data),
   };
+}
+
+export async function uploadProfilePhotoFile(
+  userId: string,
+  file: File,
+): Promise<string | null> {
+  const extFromName = file.name.split('.').pop()?.toLowerCase();
+  const ext = extFromName && /^[a-z0-9]{2,5}$/.test(extFromName) ? extFromName : 'jpg';
+  const path = `${userId}/profile/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from(PET_MEDIA_BUCKET).upload(path, file, {
+    contentType: file.type || 'image/jpeg',
+    upsert: false,
+  });
+  if (error) {
+    console.error('uploadProfilePhotoFile', error);
+    return null;
+  }
+  return path;
+}
+
+/** Saves web community display fields only — does not set signup_complete. */
+export async function saveWebCommunityProfile(input: {
+  userId: string;
+  name: string;
+  photoUri: string;
+}): Promise<string | null> {
+  const name = input.name.trim();
+  if (name.length < 2) return 'Enter a name with at least 2 characters.';
+  if (!input.photoUri.trim()) return 'Pick an avatar or upload a photo.';
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      name,
+      photo_uri: input.photoUri,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', input.userId);
+
+  if (error) {
+    console.error('saveWebCommunityProfile', error);
+    return error.message;
+  }
+  return null;
 }
 
 export function subscribeGlobalCommunity(onChange: () => void): () => void {

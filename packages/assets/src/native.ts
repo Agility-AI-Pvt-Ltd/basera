@@ -36,4 +36,14 @@ export const WEB_IMAGES = {
   communityBg: require('../images/web/community_bg.png') as RnImageSource,
 };
 
+/** Preset community avatars — keys match PRESET_AVATAR_IDS / photo_uri `preset:…`. */
+export const AVATAR_PRESETS = {
+  'avatar-01': require('../images/avatars/avatar-01.jpg') as RnImageSource,
+  'avatar-02': require('../images/avatars/avatar-02.jpg') as RnImageSource,
+  'avatar-03': require('../images/avatars/avatar-03.jpg') as RnImageSource,
+  'avatar-04': require('../images/avatars/avatar-04.jpg') as RnImageSource,
+  'avatar-05': require('../images/avatars/avatar-05.jpg') as RnImageSource,
+  'avatar-06': require('../images/avatars/avatar-06.jpg') as RnImageSource,
+};
+
 /** Prefer `import X from '@basera/assets/images/onboarding/*.svg'` with svg-transformer. */

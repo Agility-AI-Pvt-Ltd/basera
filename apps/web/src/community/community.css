@@ -874,6 +874,117 @@
   cursor: wait;
 }
 
+.community-profile-setup .community-muted {
+  margin-bottom: 18px;
+}
+
+.community-field-label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--bc-muted);
+}
+
+.community-avatar-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 16px 0 12px;
+}
+
+.community-avatar-tabs button {
+  border: 1px solid var(--bc-border);
+  background: var(--bc-bg);
+  color: var(--bc-muted);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.community-avatar-tabs button.is-active {
+  background: var(--bc-accent-soft);
+  border-color: transparent;
+  color: var(--bc-accent);
+}
+
+.community-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.community-avatar-option {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bc-bg);
+  cursor: pointer;
+}
+
+.community-avatar-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.community-avatar-option.is-selected {
+  border-color: var(--bc-accent);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+.community-avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.community-avatar-upload-preview,
+.community-avatar-upload-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.community-avatar-upload-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--bc-bg);
+  border: 1px dashed var(--bc-border);
+  color: var(--bc-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 8px;
+}
+
+.community-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--bc-border);
+  background: var(--bc-surface);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.community-file-btn input {
+  display: none;
+}
+
 .community-btn-spinner {
   flex-shrink: 0;
   animation: community-spin 0.7s linear infinite;

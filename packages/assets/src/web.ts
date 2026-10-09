@@ -24,6 +24,12 @@ import fullHeroBanner from '../images/web/full_hero_banner.png';
 import heroImg from '../images/web/hero_img.png';
 import heroImg2 from '../images/web/hero_img2.png';
 import playstore from '../images/web/playstore.png';
+import avatar01 from '../images/avatars/avatar-01.jpg';
+import avatar02 from '../images/avatars/avatar-02.jpg';
+import avatar03 from '../images/avatars/avatar-03.jpg';
+import avatar04 from '../images/avatars/avatar-04.jpg';
+import avatar05 from '../images/avatars/avatar-05.jpg';
+import avatar06 from '../images/avatars/avatar-06.jpg';
 
 export const BRAND_IMAGES = {
   logo: baseraLogo,
@@ -41,6 +47,16 @@ export const WEB_IMAGES = {
   heroImg2,
   fullHeroBanner,
   communityBg,
+} as const;
+
+/** Preset community avatars — keys match PRESET_AVATAR_IDS / photo_uri `preset:…`. */
+export const AVATAR_PRESETS = {
+  'avatar-01': avatar01,
+  'avatar-02': avatar02,
+  'avatar-03': avatar03,
+  'avatar-04': avatar04,
+  'avatar-05': avatar05,
+  'avatar-06': avatar06,
 } as const;
 
 export const ONBOARDING_IMAGES = {

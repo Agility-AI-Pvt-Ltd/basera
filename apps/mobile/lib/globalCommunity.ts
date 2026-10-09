@@ -1,4 +1,9 @@
-import type { GlobalComment, GlobalPost, GlobalPostType } from '@basera/shared';
+import {
+  isPresetAvatarUri,
+  type GlobalComment,
+  type GlobalPost,
+  type GlobalPostType,
+} from '@basera/shared';
 
 import { PET_MEDIA_BUCKET } from '@/lib/petStorage';
 import { supabase } from '@/lib/supabase';
@@ -23,7 +28,9 @@ function mapAuthor(
   const key = row?.photo_uri ?? null;
   let photoUri: string | null = null;
   if (key) {
-    photoUri = photoUrls.get(key) ?? (isAbsoluteUri(key) ? key : null);
+    photoUri =
+      photoUrls.get(key) ??
+      (isPresetAvatarUri(key) || isAbsoluteUri(key) ? key : null);
   }
   return {
     id: fallbackId,
@@ -55,8 +62,15 @@ async function resolveProfilePhotoUrls(
   const storageKeys: string[] = [];
   for (const key of photoKeys) {
     if (!key) continue;
-    if (isAbsoluteUri(key)) urls.set(key, key);
-    else storageKeys.push(key);
+    if (isPresetAvatarUri(key)) {
+      urls.set(key, key);
+      continue;
+    }
+    if (isAbsoluteUri(key)) {
+      urls.set(key, key);
+      continue;
+    }
+    storageKeys.push(key);
   }
   const unique = [...new Set(storageKeys)];
   if (unique.length === 0) return urls;

@@ -88,6 +88,40 @@ export function displayAuthorName(
   return authorName?.trim() || 'Pet parent';
 }
 
+/** Preset avatars selectable on web community signup (replace art in packages/assets/images/avatars). */
+export const PRESET_AVATAR_IDS = [
+  'avatar-01',
+  'avatar-02',
+  'avatar-03',
+  'avatar-04',
+  'avatar-05',
+  'avatar-06',
+] as const;
+
+export type PresetAvatarId = (typeof PRESET_AVATAR_IDS)[number];
+
+const PRESET_AVATAR_PREFIX = 'preset:';
+
+export function presetAvatarUri(id: PresetAvatarId | string): string {
+  return `${PRESET_AVATAR_PREFIX}${id}`;
+}
+
+export function isPresetAvatarUri(uri: string | null | undefined): boolean {
+  return typeof uri === 'string' && uri.startsWith(PRESET_AVATAR_PREFIX);
+}
+
+export function parsePresetAvatarId(uri: string | null | undefined): PresetAvatarId | null {
+  if (!isPresetAvatarUri(uri)) return null;
+  const id = uri!.slice(PRESET_AVATAR_PREFIX.length);
+  return (PRESET_AVATAR_IDS as readonly string[]).includes(id) ? (id as PresetAvatarId) : null;
+}
+
+/** Web community needs a display name before joining the feed (mobile signup stays incomplete). */
+export function hasWebCommunityProfile(profile: { name?: string | null; photo_uri?: string | null } | null): boolean {
+  if (!profile) return false;
+  return (profile.name ?? '').trim().length >= 2 && Boolean(profile.photo_uri?.trim());
+}
+
 /** True when the post media should use the video player (not image lightbox). */
 export function isCommunityVideoMedia(
   post: Pick<GlobalPost, 'postType' | 'mediaUrl' | 'mediaStorageKey'>,

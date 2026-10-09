@@ -18,6 +18,6 @@ export async function uploadProfilePhoto(
 }
 
 export async function removeOldProfilePhoto(storageKey: string | null | undefined) {
-  if (!storageKey || storageKey.startsWith('http')) return;
+  if (!storageKey || storageKey.startsWith('http') || storageKey.startsWith('preset:')) return;
   await supabase.storage.from(PET_MEDIA_BUCKET).remove([storageKey]);
 }

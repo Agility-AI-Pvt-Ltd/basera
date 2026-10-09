@@ -1,4 +1,4 @@
-import { BRAND_IMAGES, WEB_IMAGES } from '@basera/assets/web';
+import { AVATAR_PRESETS, BRAND_IMAGES, WEB_IMAGES } from '@basera/assets/web';
 import {
   displayAuthorName,
   feedDayKey,
@@ -6,9 +6,12 @@ import {
   formatMemberCount,
   isCommunityVideoMedia,
   POST_REPORT_REASONS,
+  PRESET_AVATAR_IDS,
+  presetAvatarUri,
   type GlobalComment,
   type GlobalPost,
   type GlobalPostType,
+  type PresetAvatarId,
 } from '@basera/shared';
 import {
   CalendarDays,
@@ -42,10 +45,12 @@ import {
   fetchMemberCount,
   fetchProfilePreview,
   reportGlobalPost,
+  saveWebCommunityProfile,
   subscribeGlobalCommunity,
   togglePostLike,
   updateGlobalPost,
   uploadCommunityFile,
+  uploadProfilePhotoFile,
 } from '../lib/globalCommunity';
 import { PhotoAdjust } from './PhotoAdjust';
 import { isValidEmail, normalizeEmail } from '../lib/email';
@@ -235,6 +240,167 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
         <p className="community-footnote">
           Adoption, training, nutrition & more — open the Basera mobile app.
         </p>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSetupPanel({
+  userId,
+  initialName,
+  onDone,
+}: {
+  userId: string;
+  initialName?: string;
+  onDone: () => void;
+}) {
+  const [name, setName] = useState(initialName?.trim() ?? '');
+  const [presetId, setPresetId] = useState<PresetAvatarId>('avatar-01');
+  const [mode, setMode] = useState<'preset' | 'upload'>('preset');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!uploadFile) {
+      setUploadPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(uploadFile);
+    setUploadPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [uploadFile]);
+
+  const save = async () => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2) {
+      setError('Enter your name (at least 2 characters).');
+      return;
+    }
+    if (mode === 'upload' && !uploadFile) {
+      setError('Choose a profile photo, or pick an avatar.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    let photoUri = presetAvatarUri(presetId);
+    if (mode === 'upload' && uploadFile) {
+      const key = await uploadProfilePhotoFile(userId, uploadFile);
+      if (!key) {
+        setLoading(false);
+        setError('Could not upload that photo. Try again or pick an avatar.');
+        return;
+      }
+      photoUri = key;
+    }
+
+    const err = await saveWebCommunityProfile({ userId, name: trimmed, photoUri });
+    setLoading(false);
+    if (err) setError(err);
+    else onDone();
+  };
+
+  return (
+    <div
+      className="community-auth-wrap"
+      style={{ backgroundImage: `url(${WEB_IMAGES.communityBg})` }}>
+      <div className="community-auth community-profile-setup">
+        <div className="bc-brand" style={{ marginBottom: 16 }}>
+          <img className="bc-brand-mark" src={BRAND_IMAGES.logo} alt="" />
+          <span>Basera</span>
+        </div>
+        <h1>Set up your profile</h1>
+        <p className="community-muted">
+          Choose a name and avatar for the community. You can finish the rest in the Basera app
+          later.
+        </p>
+
+        <label className="community-field-label" htmlFor="community-profile-name">
+          Display name
+        </label>
+        <input
+          id="community-profile-name"
+          className="community-input"
+          placeholder="Your name"
+          autoComplete="name"
+          value={name}
+          disabled={loading}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <div className="community-avatar-tabs" role="tablist" aria-label="Avatar source">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'preset'}
+            className={mode === 'preset' ? 'is-active' : undefined}
+            disabled={loading}
+            onClick={() => setMode('preset')}>
+            Avatar
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'upload'}
+            className={mode === 'upload' ? 'is-active' : undefined}
+            disabled={loading}
+            onClick={() => setMode('upload')}>
+            Photo
+          </button>
+        </div>
+
+        {mode === 'preset' ? (
+          <div className="community-avatar-grid" role="listbox" aria-label="Choose an avatar">
+            {PRESET_AVATAR_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="option"
+                aria-selected={presetId === id}
+                className={`community-avatar-option${presetId === id ? ' is-selected' : ''}`}
+                disabled={loading}
+                onClick={() => setPresetId(id)}>
+                <img src={AVATAR_PRESETS[id]} alt="" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="community-avatar-upload">
+            {uploadPreview ? (
+              <img className="community-avatar-upload-preview" src={uploadPreview} alt="" />
+            ) : (
+              <div className="community-avatar-upload-placeholder">Add a photo</div>
+            )}
+            <label className="community-file-btn">
+              <input
+                type="file"
+                accept="image/*"
+                disabled={loading}
+                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+              />
+              {uploadFile ? 'Change photo' : 'Upload photo'}
+            </label>
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="community-btn"
+          disabled={loading}
+          aria-busy={loading}
+          onClick={() => void save()}>
+          {loading ? (
+            <>
+              <Loader2 className="community-btn-spinner" size={18} aria-hidden />
+              Saving…
+            </>
+          ) : (
+            'Continue to community'
+          )}
+        </button>
+        {error ? <p className="community-error">{error}</p> : null}
       </div>
     </div>
   );
@@ -917,6 +1083,8 @@ function ReportModal({
 export function CommunityPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [profileReady, setProfileReady] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(false);
   const [posts, setPosts] = useState<GlobalPost[]>([]);
   const [members, setMembers] = useState(0);
   const [posting, setPosting] = useState(false);
@@ -948,9 +1116,22 @@ export function CommunityPage() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setProfileReady(false);
+      setProfileChecked(false);
+      setMyProfile({ name: 'You', photoUri: null });
+      return;
+    }
+    setProfileChecked(false);
     void fetchProfilePreview(userId).then((p) => {
-      if (p) setMyProfile(p);
+      if (p) {
+        setMyProfile({ name: p.name, photoUri: p.photoUri });
+        setProfileReady(p.ready);
+      } else {
+        setMyProfile({ name: 'You', photoUri: null });
+        setProfileReady(false);
+      }
+      setProfileChecked(true);
     });
   }, [userId]);
 
@@ -973,14 +1154,14 @@ export function CommunityPage() {
   }, [userId]);
 
   useEffect(() => {
-    if (!ready || !userId) return;
+    if (!ready || !userId || !profileReady) return;
     void reload();
-  }, [ready, userId, reload]);
+  }, [ready, userId, profileReady, reload]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !profileReady) return;
     return subscribeGlobalCommunity(() => void reload());
-  }, [userId, reload]);
+  }, [userId, profileReady, reload]);
 
   const openCreate = () => {
     setMenuPostId(null);
@@ -1004,6 +1185,23 @@ export function CommunityPage() {
         onAuthed={() =>
           supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null))
         }
+      />
+    );
+  }
+  if (!profileChecked) return <div className="bc-loading">Loading community…</div>;
+  if (!profileReady) {
+    return (
+      <ProfileSetupPanel
+        userId={userId}
+        initialName={myProfile.name !== 'You' ? myProfile.name : ''}
+        onDone={() => {
+          void fetchProfilePreview(userId).then((p) => {
+            if (p) {
+              setMyProfile({ name: p.name, photoUri: p.photoUri });
+              setProfileReady(p.ready);
+            }
+          });
+        }}
       />
     );
   }
