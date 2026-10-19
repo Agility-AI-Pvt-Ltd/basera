@@ -211,6 +211,34 @@ export const ADMIN_RESOURCES: AdminResource[] = [
     statusField: 'status',
     statusOptions: ['pending', 'accepted', 'declined'],
   },
+  {
+    id: 'community_animals',
+    table: 'community_animals',
+    label: 'Collar Tags & Street Animals',
+    path: '/community/animals',
+    description: 'Community animals with vaccination drive QR collars',
+    columns: [
+      { key: 'tag_code', label: 'Tag ID', primary: true },
+      { key: 'name', label: 'Name' },
+      { key: 'status', label: 'Status' },
+      { key: 'city', label: 'City' },
+      { key: 'last_seen_location', label: 'Last Location' },
+      { key: 'caregiver_contact', label: 'Caregiver' },
+      { key: 'created_at', label: 'Registered' },
+    ],
+    orderBy: { column: 'created_at', ascending: false },
+    editableFields: [
+      'name',
+      'status',
+      'city',
+      'territory',
+      'caregiver_contact',
+      'last_seen_location',
+      'is_sterilized',
+    ],
+    statusField: 'status',
+    statusOptions: ['unassigned', 'active', 'treatment', 'missing', 'adopted', 'deceased'],
+  },
 ];
 
 export const DASHBOARD_METRICS = ADMIN_RESOURCES.map((r) => ({

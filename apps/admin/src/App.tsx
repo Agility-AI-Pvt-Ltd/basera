@@ -51,6 +51,10 @@ export function App() {
           path="/community/connections"
           element={<Navigate to="/resource/community_connections" replace />}
         />
+        <Route
+          path="/community/animals"
+          element={<Navigate to="/resource/community_animals" replace />}
+        />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
