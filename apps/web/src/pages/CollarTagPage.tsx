@@ -1,21 +1,26 @@
 import {
   Activity,
   AlertCircle,
+  ArrowRight,
   Calendar,
   CheckCircle2,
+  Compass,
+  Eye,
+  Heart,
   HeartHandshake,
+  HelpCircle,
+  Info,
   MapPin,
   Phone,
+  PlusCircle,
   Search,
   Share2,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Tag,
   Users,
   Utensils,
-  Eye,
-  PlusCircle,
-  Tag,
 } from 'lucide-react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -295,17 +300,19 @@ export function CollarTagPage() {
       </header>
 
       <main className="tag-container">
-        {/* Search Bar for Quick Tag Lookup */}
-        <form className="tag-lookup-bar" onSubmit={handleSearch}>
-          <Search size={18} color="#6D28D9" aria-hidden />
-          <input
-            type="text"
-            placeholder="Search collar tag code (e.g. BAS-001)"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-          <button type="submit">Lookup</button>
-        </form>
+        {/* Compact Search Bar when viewing an animal, loading, or not found */}
+        {(animal || notFound || loading) && (
+          <form className="tag-lookup-bar" onSubmit={handleSearch}>
+            <Search size={18} color="#6D28D9" aria-hidden />
+            <input
+              type="text"
+              placeholder="Search collar tag code (e.g. BAS-001)"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <button type="submit">Lookup</button>
+          </form>
+        )}
 
         {/* Loading State */}
         {loading && (
@@ -331,33 +338,334 @@ export function CollarTagPage() {
           </div>
         )}
 
-        {/* Empty / Landing Search State */}
+        {/* Empty / Landing Search State - Sensitive, Pet-Friendly Mission & Lookup Hub */}
         {!loading && !notFound && !animal && (
-          <div className="tag-empty-state">
-            <ShieldCheck size={48} color="#7C3AED" />
-            <h2>Basera Community Collar Lookup</h2>
-            <p>
-              Enter the tag number printed below the QR code on the animal's
-              collar to check vaccination history, sterilization status, and
-              caregiver contacts.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button
-                type="button"
-                className="tag-nav__btn"
-                onClick={() => navigate('/t/BAS-001')}
-              >
-                View Sample Active Tag (BAS-001)
-              </button>
-              <button
-                type="button"
-                className="tag-nav__btn"
-                style={{ background: '#4C1D95' }}
-                onClick={() => navigate('/t/BAS-003')}
-              >
-                Test Field Pairing (BAS-003)
-              </button>
-            </div>
+          <div className="tag-landing">
+            {/* Hero Section */}
+            <section className="tag-landing-hero">
+              <div className="tag-landing-badge">
+                <ShieldCheck size={15} />
+                <span>Basera Community Collar Initiative</span>
+              </div>
+              <h1 className="tag-landing-title">
+                Every Collar Gives a Voice to a Community Animal
+              </h1>
+              <p className="tag-landing-lead">
+                Street animals belong to our shared neighborhoods. We partner with local feeders,
+                veterinarians, and animal welfare advocates to equip community dogs and cats with
+                reflective, QR-linked collars during mass vaccination drives. A visible tag provides
+                verifiable proof of rabies immunization, protects against wrongful relocation, and
+                gives compassionate citizens direct access to their daily caregivers.
+              </p>
+
+              {/* Prominent Lookup Card */}
+              <form className="tag-landing-search" onSubmit={handleSearch}>
+                <div className="tag-landing-search__box">
+                  <Search size={20} className="tag-landing-search__icon" aria-hidden />
+                  <input
+                    type="text"
+                    id="tag-search-input"
+                    aria-label="Enter Collar Tag Code"
+                    placeholder="Enter 6-character tag code (e.g. BAS-001)"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                  <button type="submit" className="tag-landing-search__btn">
+                    <span>Verify Tag</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+
+                <div className="tag-landing-search__hints">
+                  <span className="tag-hint-label">Try sample tags:</span>
+                  <button
+                    type="button"
+                    className="tag-hint-chip"
+                    onClick={() => navigate('/t/BAS-001')}
+                  >
+                    BAS-001 (Tommy - Active)
+                  </button>
+                  <button
+                    type="button"
+                    className="tag-hint-chip"
+                    onClick={() => navigate('/t/BAS-002')}
+                  >
+                    BAS-002 (Bandit - St. Inez)
+                  </button>
+                  <button
+                    type="button"
+                    className="tag-hint-chip tag-hint-chip--intake"
+                    onClick={() => navigate('/t/BAS-003')}
+                  >
+                    BAS-003 (Field Intake & Pairing)
+                  </button>
+                </div>
+
+                <div className="tag-landing-search__note">
+                  <Info size={15} className="tag-note-icon" />
+                  <span>
+                    The tag code is laser-marked directly beneath the QR code on the reflective band.
+                    It can be read clearly from a respectful distance of 3-4 feet without stressing the animal.
+                  </span>
+                </div>
+              </form>
+            </section>
+
+            {/* Why Every Tag Matters (The Case / Mission Grid) */}
+            <section className="tag-section">
+              <div className="tag-section-header">
+                <span className="tag-section-tag">
+                  <Heart size={14} />
+                  <span>Why We Do This</span>
+                </span>
+                <h2>Transforming Neighborhood Coexistence</h2>
+                <p>
+                  Without visible identification, street animals face false rabies scares, illegal
+                  relocations, road accidents, and uncoordinated care. Here is how verifiable collar
+                  tags safeguard them every single day:
+                </p>
+              </div>
+
+              <div className="tag-impact-grid">
+                <div className="tag-impact-card">
+                  <div className="tag-impact-icon-wrap tag-impact-icon-wrap--emerald">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <h3>Rabies Immunity & Public Safety</h3>
+                  <p>
+                    Eliminates panic and fear. Anyone in the neighborhood can scan the tag to see the
+                    exact Anti-Rabies Vaccine (ARV) dates, batch numbers, and expiry countdown administered
+                    by qualified veterinarians.
+                  </p>
+                </div>
+
+                <div className="tag-impact-card">
+                  <div className="tag-impact-icon-wrap tag-impact-icon-wrap--purple">
+                    <MapPin size={22} />
+                  </div>
+                  <h3>Territory Defense & Legal Protection</h3>
+                  <p>
+                    Under Animal Birth Control (ABC) guidelines, sterilized street dogs cannot be relocated.
+                    Visible ear-notching and collar records provide instant legal verification of their protected
+                    home street.
+                  </p>
+                </div>
+
+                <div className="tag-impact-card">
+                  <div className="tag-impact-icon-wrap tag-impact-icon-wrap--amber">
+                    <Phone size={22} />
+                  </div>
+                  <h3>Emergency Caregiver Hotline</h3>
+                  <p>
+                    In road accidents, severe illness, or extreme weather, good samaritans can directly contact
+                    the animal's dedicated daily feeders and local rescue contacts in seconds.
+                  </p>
+                </div>
+
+                <div className="tag-impact-card">
+                  <div className="tag-impact-icon-wrap tag-impact-icon-wrap--blue">
+                    <Users size={22} />
+                  </div>
+                  <h3>Community Feeding & Sighting Logs</h3>
+                  <p>
+                    Prevents missed meals and coordinates neighborhood stewardship. Local residents and feeders
+                    crowdsource sighting updates, meal logs, and recovery notes in real time.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Responsible Animal Interaction Guide (Sensitive & Pet-Friendly) */}
+            <section className="tag-section tag-section--guide">
+              <div className="tag-guide-banner">
+                <div className="tag-guide-header">
+                  <span className="tag-guide-pill">
+                    <HeartHandshake size={14} />
+                    <span>Pet-Friendly & Sensitive Care</span>
+                  </span>
+                  <h2>Approaching a Community Dog Responsibly</h2>
+                  <p>
+                    Street animals rely heavily on environmental cues and body language. Approaching an
+                    unfamiliar animal requires patience, calm energy, and deep respect for their space.
+                  </p>
+                </div>
+
+                <div className="tag-rules-grid">
+                  <div className="tag-rule-card">
+                    <div className="tag-rule-num">1</div>
+                    <div className="tag-rule-content">
+                      <h4>Never Corner, Chase, or Crowd</h4>
+                      <p>
+                        Always provide an open exit path. Avoid looming over them or making sudden gestures.
+                        Crouch gently to their eye level at a safe distance and speak softly so they know
+                        you have friendly intentions.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="tag-rule-card">
+                    <div className="tag-rule-num">2</div>
+                    <div className="tag-rule-content">
+                      <h4>Read the Tag from a Respectful Distance</h4>
+                      <p>
+                        Do not thrust a smartphone lens into an anxious dog's face. If the animal is timid,
+                        read the large 6-character tag printed along the band (e.g. BAS-001) from 3 to 4 feet away
+                        and enter it manually above.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="tag-rule-card">
+                    <div className="tag-rule-num">3</div>
+                    <div className="tag-rule-content">
+                      <h4>Observe Subtle Stress Signals</h4>
+                      <p>
+                        Tucked tails, rapid blinking, lip-licking, stiffened backs, or turning the head away
+                        indicate unease. If you notice any of these signs, step back slowly and give the dog
+                        time and space to relax.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="tag-rule-card">
+                    <div className="tag-rule-num">4</div>
+                    <div className="tag-rule-content">
+                      <h4>Protocol for Sick or Injured Animals</h4>
+                      <p>
+                        If the animal appears injured or bleeding, do not attempt to move or lift them unassisted
+                        without professional equipment. Search their collar code to reach their primary caregiver,
+                        or contact a local animal ambulance immediately.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="tag-guide-footer-tip">
+                  <Sparkles size={18} className="tag-tip-icon" />
+                  <div>
+                    <strong>Responsible Feeding Best Practice:</strong> Feed in shaded, low-traffic areas away
+                    from vehicle parking and building doorways. Always provide a clean bowl of fresh drinking water,
+                    especially during summer months.
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* What Lives Inside Every Digital Passport */}
+            <section className="tag-section">
+              <div className="tag-section-header">
+                <span className="tag-section-tag">
+                  <Compass size={14} />
+                  <span>Inside Every Profile</span>
+                </span>
+                <h2>Transparent Community Medical Records</h2>
+                <p>
+                  Every collar lookup provides transparent, community-verified data to keep pets and neighborhoods safe:
+                </p>
+              </div>
+
+              <div className="tag-features-row">
+                <div className="tag-feature-pill">
+                  <CheckCircle2 size={16} color="#059669" />
+                  <span>Annual Anti-Rabies vaccination status with expiry countdown</span>
+                </div>
+                <div className="tag-feature-pill">
+                  <CheckCircle2 size={16} color="#059669" />
+                  <span>Sterilization (ABC) and ear-notch surgical identification</span>
+                </div>
+                <div className="tag-feature-pill">
+                  <CheckCircle2 size={16} color="#059669" />
+                  <span>Primary feeder contact with one-tap phone and WhatsApp access</span>
+                </div>
+                <div className="tag-feature-pill">
+                  <CheckCircle2 size={16} color="#059669" />
+                  <span>Crowdsourced feeding logs and neighborhood sighting timeline</span>
+                </div>
+                <div className="tag-feature-pill">
+                  <CheckCircle2 size={16} color="#059669" />
+                  <span>Real-time field intake pairing in 30 seconds during volunteer drives</span>
+                </div>
+                <div className="tag-feature-pill">
+                  <CheckCircle2 size={16} color="#059669" />
+                  <span>Automatic location updates whenever a citizen logs a sighting</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Community FAQ */}
+            <section className="tag-section">
+              <div className="tag-section-header">
+                <span className="tag-section-tag">
+                  <HelpCircle size={14} />
+                  <span>Community FAQ</span>
+                </span>
+                <h2>Frequently Asked Questions</h2>
+              </div>
+
+              <div className="tag-faq-grid">
+                <div className="tag-faq-card">
+                  <h4>Are these collars safe and comfortable for the dogs?</h4>
+                  <p>
+                    Yes. All collars are designed specifically for free-roaming community animals with
+                    elastic stretch safety segments and breakaway points to prevent snagging on gates or shrubs.
+                    The band is lined with 360-degree reflective stitching to protect animals from oncoming traffic at night.
+                  </p>
+                </div>
+
+                <div className="tag-faq-card">
+                  <h4>Can any citizen log a feeding or sighting update?</h4>
+                  <p>
+                    Yes! Community stewardship works best when neighbors collaborate. If you feed the animal,
+                    notice they have moved to an adjacent lane, or spot them in good health, submit a quick log.
+                    It helps local feeders keep an accurate welfare ledger.
+                  </p>
+                </div>
+
+                <div className="tag-faq-card">
+                  <h4>What should I do if a collar is too tight or damaged?</h4>
+                  <p>
+                    Enter the tag code here and call the registered caregiver phone number. Local feeders
+                    maintain replacement collar bands and will adjust or replace the collar during their regular rounds.
+                  </p>
+                </div>
+
+                <div className="tag-faq-card">
+                  <h4>How can our volunteer group or NGO get collar tags?</h4>
+                  <p>
+                    Basera collaborates with local animal welfare organizations, RWAs, and independent caretakers
+                    to provide subsidized collar batches for upcoming vaccination drives. Connect with us through the
+                    community portal to organize a drive in your locality.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Promoting Basera & Movement CTA */}
+            <section className="tag-cta-section">
+              <div className="tag-cta-card">
+                <div className="tag-cta-content">
+                  <span className="tag-cta-badge">
+                    <Heart size={14} />
+                    <span>Empowering Street Animal Welfare</span>
+                  </span>
+                  <h2>Be the Guardian Your Street Animals Deserve</h2>
+                  <p>
+                    Basera is built to uplift community animals across India. Connect with neighborhood feeders,
+                    map your local street dogs, coordinate medical emergencies, and create safe, welcoming spaces
+                    for all beings.
+                  </p>
+                  <div className="tag-cta-actions">
+                    <Link to="/community" className="tag-cta-btn-primary">
+                      <span>Explore Community Feed</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                    <Link to="/" className="tag-cta-btn-secondary">
+                      <span>Learn More About Basera</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         )}
 

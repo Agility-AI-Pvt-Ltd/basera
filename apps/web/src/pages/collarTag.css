@@ -761,3 +761,563 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ==========================================================================
+   Sensitive & Pet-Friendly Collar Landing Page Styles
+   ========================================================================== */
+
+.tag-landing {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+/* 1. Hero Card & Prominent Search */
+.tag-landing-hero {
+  background: linear-gradient(145deg, #ffffff 0%, #fbf9ff 60%, #f5f0ff 100%);
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem 2.5rem;
+  box-shadow: 0 20px 50px rgba(76, 29, 149, 0.08);
+  text-align: center;
+}
+
+.tag-landing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.95rem;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  color: var(--purple-700);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+}
+
+.tag-landing-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.2;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+  .tag-landing-title {
+    font-size: 1.75rem;
+  }
+  .tag-landing-hero {
+    padding: 2rem 1.25rem;
+  }
+}
+
+.tag-landing-lead {
+  font-size: 1.05rem;
+  color: var(--ink-muted);
+  max-width: 680px;
+  margin: 0 auto 2.25rem;
+  line-height: 1.65;
+}
+
+/* Hero Search Box */
+.tag-landing-search {
+  max-width: 620px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tag-landing-search__box {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 2px solid rgba(124, 58, 237, 0.35);
+  border-radius: 999px;
+  padding: 0.45rem 0.5rem 0.45rem 1.25rem;
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.12);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tag-landing-search__box:focus-within {
+  border-color: var(--purple-600);
+  box-shadow: 0 12px 35px rgba(124, 58, 237, 0.22);
+}
+
+.tag-landing-search__icon {
+  color: var(--purple-600);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.tag-landing-search__box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1.05rem;
+  font-family: inherit;
+  color: var(--ink);
+  background: transparent;
+}
+
+.tag-landing-search__btn {
+  background: var(--purple-600);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.tag-landing-search__btn:hover {
+  background: var(--purple-700);
+  transform: translateY(-1px);
+}
+
+.tag-landing-search__hints {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.tag-hint-label {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.tag-hint-chip {
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  color: var(--purple-700);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tag-hint-chip:hover {
+  background: var(--purple-50);
+  border-color: var(--purple-600);
+  transform: translateY(-1px);
+}
+
+.tag-hint-chip--intake {
+  background: #fdf2f8;
+  border-color: rgba(219, 39, 119, 0.3);
+  color: #be185d;
+}
+
+.tag-hint-chip--intake:hover {
+  background: #fce7f3;
+  border-color: #db2777;
+}
+
+.tag-landing-search__note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0.25rem auto 0;
+  max-width: 540px;
+  text-align: left;
+  line-height: 1.45;
+}
+
+.tag-note-icon {
+  color: var(--purple-600);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* 2. Generic Section Layout */
+.tag-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.tag-section-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.tag-section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--purple-700);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+
+.tag-section-header h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+.tag-section-header p {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Impact 4-Card Grid */
+.tag-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.tag-impact-card {
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  border-radius: var(--radius-md);
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tag-impact-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(76, 29, 149, 0.08);
+}
+
+.tag-impact-icon-wrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tag-impact-icon-wrap--emerald {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.tag-impact-icon-wrap--purple {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.tag-impact-icon-wrap--amber {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.tag-impact-icon-wrap--blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.tag-impact-card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.tag-impact-card p {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* 3. Sensitive & Pet-Friendly Animal Interaction Guide */
+.tag-section--guide {
+  margin-top: 0.5rem;
+}
+
+.tag-guide-banner {
+  background: linear-gradient(145deg, #f0fdfa 0%, #f7fefc 50%, #ffffff 100%);
+  border: 1px solid rgba(13, 148, 136, 0.22);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  box-shadow: 0 16px 40px rgba(13, 148, 136, 0.08);
+}
+
+.tag-guide-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 2rem;
+}
+
+.tag-guide-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.65rem;
+}
+
+.tag-guide-header h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #134e4a;
+  margin: 0 0 0.5rem;
+}
+
+.tag-guide-header p {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.tag-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.tag-rule-card {
+  background: #ffffff;
+  border: 1px solid rgba(13, 148, 136, 0.15);
+  border-radius: var(--radius-md);
+  padding: 1.35rem 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.tag-rule-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0d9488;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tag-rule-content h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.35rem;
+}
+
+.tag-rule-content p {
+  font-size: 0.86rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.tag-guide-footer-tip {
+  margin-top: 1.5rem;
+  background: rgba(13, 148, 136, 0.08);
+  border: 1px dashed rgba(13, 148, 136, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  color: #115e59;
+  line-height: 1.5;
+}
+
+.tag-tip-icon {
+  color: #0d9488;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+/* 4. Inside Every Profile Feature Pills */
+.tag-features-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.tag-feature-pill {
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+.tag-feature-pill svg {
+  flex-shrink: 0;
+}
+
+/* 5. FAQs */
+.tag-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.tag-faq-card {
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+}
+
+.tag-faq-card h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+  line-height: 1.35;
+}
+
+.tag-faq-card p {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 6. Promoting Basera & Movement CTA */
+.tag-cta-section {
+  margin-top: 1rem;
+}
+
+.tag-cta-card {
+  background: linear-gradient(145deg, #4c1d95 0%, #6d28d9 60%, #7c3aed 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 3rem 2.25rem;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(76, 29, 149, 0.25);
+}
+
+.tag-cta-content {
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+.tag-cta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+}
+
+.tag-cta-card h2 {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 1rem;
+  line-height: 1.25;
+}
+
+.tag-cta-card p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+
+.tag-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.tag-cta-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  background: #ffffff;
+  color: var(--purple-900) !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.tag-cta-btn-primary:hover {
+  background: #f8fafc;
+  transform: translateY(-2px);
+}
+
+.tag-cta-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.tag-cta-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
