@@ -69,6 +69,8 @@ export type PetNutritionPlan = {
   treatLimit: number;
   waterGoalCups: number | null;
   guidanceNotes: string | null;
+  source: 'rule_based' | 'ai';
+  model: string | null;
   createdAt: string;
 };
 

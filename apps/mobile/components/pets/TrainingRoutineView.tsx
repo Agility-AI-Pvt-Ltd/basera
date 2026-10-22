@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { PetAvatar } from '@/components/pets/PetAvatar';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
@@ -67,11 +69,12 @@ export function TrainingRoutineView({
     [dayTasks],
   );
   const featured = nextTasks[0] ?? dayTasks[0];
+  const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
       showsVerticalScrollIndicator={false}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>

@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  buildPlanSummary,
-  generateWeeklyMeals,
-  getWeekStart,
-} from '@/lib/nutritionPlanGenerator';
 import { supabase } from '@/lib/supabase';
 import type { Pet } from '@/types/pet';
 import type {
@@ -67,7 +62,26 @@ type MealRow = {
 type FeedingLogRow = { meal_id: string; fed_at: string; fed: boolean };
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function deviceTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+}
+
+function getNextDates(startDate: string, count: number): string[] {
+  const start = new Date(`${startDate}T12:00:00`);
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return date.toISOString().slice(0, 10);
+  });
 }
 
 function mapPreferences(row: PreferencesRow): PetNutritionPreferences {
@@ -151,6 +165,7 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
   const [selectedDate, setSelectedDate] = useState(todayIso());
   const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const dayMeals = useMemo(
     () =>
@@ -175,6 +190,8 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
         .reduce((sum, t) => sum + t.quantity, 0),
     [treatLogs, selectedDate],
   );
+
+  const planDates = useMemo(() => getNextDates(todayIso(), 7), []);
 
   const foodDiary = useMemo((): FoodDiaryEntry[] => {
     const entries: FoodDiaryEntry[] = [];
@@ -224,22 +241,24 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
   const loadNutrition = useCallback(async () => {
     if (!petId) return;
 
-    const { data: prefRow } = await supabase
+    const { data: prefRow, error: preferencesError } = await supabase
       .from('pet_nutrition_preferences')
       .select('*')
       .eq('pet_id', petId)
       .maybeSingle();
+    if (preferencesError) throw preferencesError;
     setPreferences(prefRow ? mapPreferences(prefRow as PreferencesRow) : null);
 
-    const { data: foodRows } = await supabase
+    const { data: foodRows, error: foodsError } = await supabase
       .from('pet_foods')
       .select('*')
       .eq('pet_id', petId)
       .eq('is_active', true)
       .order('created_at');
+    if (foodsError) throw foodsError;
     setFoods(((foodRows as FoodRow[] | null) ?? []).map(mapFood));
 
-    const { data: planRow } = await supabase
+    const { data: planRow, error: planError } = await supabase
       .from('pet_nutrition_plans')
       .select('*')
       .eq('pet_id', petId)
@@ -247,6 +266,7 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (planError) throw planError;
 
     if (!planRow) {
       setPlan(null);
@@ -261,34 +281,42 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
         treatLimit: planRow.treat_limit,
         waterGoalCups: planRow.water_goal_cups,
         guidanceNotes: planRow.guidance_notes,
+        source: planRow.source === 'ai' ? 'ai' : 'rule_based',
+        model: planRow.model ?? null,
         createdAt: planRow.created_at,
       });
 
-      const { data: mealRows } = await supabase
+      const { data: mealRows, error: mealsError } = await supabase
         .from('pet_nutrition_meals')
         .select('*')
         .eq('plan_id', planRow.id)
         .order('meal_date')
         .order('sort_order');
+      if (mealsError) throw mealsError;
 
       const mealIds = ((mealRows as MealRow[] | null) ?? []).map((m) => m.id);
       let feedingLogs: FeedingLogRow[] = [];
       if (mealIds.length) {
-        const { data: logRows } = await supabase
+        const { data: logRows, error: feedingError } = await supabase
           .from('pet_feeding_logs')
           .select('meal_id, fed_at, fed')
           .eq('pet_id', petId)
           .in('meal_id', mealIds);
+        if (feedingError) throw feedingError;
         feedingLogs = (logRows as FeedingLogRow[] | null) ?? [];
       }
       const logByMeal = new Map(feedingLogs.map((l) => [l.meal_id, l]));
       setMeals(((mealRows as MealRow[] | null) ?? []).map((row) => mapMeal(row, logByMeal.get(row.id))));
     }
 
-    const [{ data: waterRows }, { data: treatRows }] = await Promise.all([
-      supabase.from('pet_water_logs').select('*').eq('pet_id', petId).order('logged_at', { ascending: false }),
-      supabase.from('pet_treat_logs').select('*').eq('pet_id', petId).order('logged_at', { ascending: false }),
+    // Load logs for every date in the strip so changing the selected day never triggers a reload.
+    const logStartDate = planDates[0];
+    const logEndDate = planDates[planDates.length - 1];
+    const [{ data: waterRows, error: waterError }, { data: treatRows, error: treatError }] = await Promise.all([
+      supabase.from('pet_water_logs').select('*').eq('pet_id', petId).gte('log_date', logStartDate).lte('log_date', logEndDate).order('logged_at', { ascending: false }),
+      supabase.from('pet_treat_logs').select('*').eq('pet_id', petId).gte('log_date', logStartDate).lte('log_date', logEndDate).order('logged_at', { ascending: false }),
     ]);
+    if (waterError || treatError) throw waterError ?? treatError;
 
     setWaterLogs(
       ((waterRows as { id: string; pet_id: string; log_date: string; cups: number; logged_at: string }[] | null) ?? []).map(
@@ -307,7 +335,7 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
         }),
       ),
     );
-  }, [petId]);
+  }, [petId, planDates]);
 
   useEffect(() => {
     if (!petId) {
@@ -315,7 +343,10 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
       return;
     }
     setIsReady(false);
-    loadNutrition().finally(() => setIsReady(true));
+    setError(null);
+    loadNutrition()
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Could not load nutrition data'))
+      .finally(() => setIsReady(true));
   }, [petId, loadNutrition]);
 
   const savePreferences = useCallback(
@@ -359,63 +390,39 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
   );
 
   const generatePlan = useCallback(
-    async (prefs?: PetNutritionPreferences, petOverride?: Pet, foodList?: PetFood[]) => {
+    async (prefs?: PetNutritionPreferences, petOverride?: Pet, _foodList?: PetFood[]) => {
       const activePet = petOverride ?? pet;
       const activePrefs = prefs ?? preferences;
-      const activeFoods = foodList ?? foods;
       if (!petId || !activePet || !activePrefs) throw new Error('Missing data for plan');
 
       setLoading(true);
       try {
-        await supabase
-          .from('pet_nutrition_plans')
-          .update({ is_active: false })
-          .eq('pet_id', petId)
-          .eq('is_active', true);
-
-        const summary = buildPlanSummary(activePet, activePrefs, activeFoods);
-        const { data: planRow, error: planError } = await supabase
-          .from('pet_nutrition_plans')
-          .insert({
-            pet_id: petId,
-            is_active: true,
-            daily_meals: summary.dailyMeals,
-            main_food_type: summary.mainFoodType,
-            treat_limit: summary.treatLimit,
-            water_goal_cups: summary.waterGoalCups,
-            guidance_notes: summary.guidanceNotes,
-          })
-          .select('*')
-          .single();
-        if (planError) throw planError;
-
-        const weekStart = getWeekStart();
-        const generated = generateWeeklyMeals(activePet, activePrefs, activeFoods, weekStart);
-        if (generated.length) {
-          const { error: mealError } = await supabase.from('pet_nutrition_meals').insert(
-            generated.map((m) => ({
-              plan_id: planRow.id,
-              pet_id: petId,
-              meal_date: m.mealDate,
-              meal_type: m.mealType,
-              scheduled_time: m.scheduledTime,
-              food_id: m.foodId,
-              food_name: m.foodName,
-              food_type: m.foodType,
-              planned_quantity: m.plannedQuantity,
-              unit: m.unit,
-              sort_order: m.sortOrder,
-            })),
-          );
-          if (mealError) throw mealError;
+        const { error: functionError } = await supabase.functions.invoke('generate-nutrition-plan', {
+          body: {
+            petId,
+            localDate: todayIso(),
+            timeZone: deviceTimeZone(),
+          },
+        });
+        if (functionError) {
+          const context = (functionError as { context?: Response }).context;
+          let message = functionError.message;
+          if (context) {
+            const responseBody = await context.json().catch(() => null) as { error?: string } | null;
+            message = responseBody?.error ?? message;
+          }
+          throw new Error(message);
         }
 
         await loadNutrition();
+      } catch (generationError) {
+        setError(generationError instanceof Error ? generationError.message : 'Could not generate nutrition plan');
+        throw generationError;
       } finally {
         setLoading(false);
       }
     },
-    [petId, pet, preferences, foods, loadNutrition],
+    [petId, pet, preferences, loadNutrition],
   );
 
   const toggleMealFed = useCallback(
@@ -508,8 +515,10 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
     foodDiary,
     selectedDate,
     setSelectedDate,
+    planDates,
     isReady,
     loading,
+    error,
     reload: loadNutrition,
     savePreferences,
     addFood,

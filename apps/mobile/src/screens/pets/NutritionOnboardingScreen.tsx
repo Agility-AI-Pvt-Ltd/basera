@@ -134,12 +134,25 @@ export default function NutritionOnboardingScreen() {
         setPet(activePet);
         if (!activePet) throw new Error('Pet not found');
       }
-      const prefs = await nutrition.savePreferences(buildInput(), true);
-      const savedFoods = [];
+      if (foodsDraft.length === 0 && nutrition.foods.length === 0) {
+        throw new Error('Add at least one current food so the AI can create a safe plan.');
+      }
+
+      const input = buildInput();
+      const prefs = await nutrition.savePreferences(input, false);
+      const savedFoods = [...nutrition.foods];
       for (const food of foodsDraft) {
+        const alreadySaved = savedFoods.some(
+          (existing) =>
+            existing.name.trim().toLowerCase() === food.name.trim().toLowerCase() &&
+            (existing.brand ?? '').trim().toLowerCase() === (food.brand ?? '').trim().toLowerCase(),
+        );
+        if (alreadySaved) continue;
         savedFoods.push(await nutrition.addFood(food));
       }
+      setFoodsDraft([]);
       await nutrition.generatePlan(prefs, activePet, savedFoods);
+      await nutrition.savePreferences(input, true);
       navigation.replace('PetDetail', { petId: params.petId, initialTab: 'nutrition' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create nutrition plan');
@@ -321,7 +334,7 @@ export default function NutritionOnboardingScreen() {
 
       {step === 3 ? (
         <View style={styles.block}>
-          <Text style={styles.label}>Record current foods (optional but helpful)</Text>
+          <Text style={styles.label}>Record current foods (required for a safe AI plan)</Text>
           {foodsDraft.map((food, idx) => (
             <View key={idx} style={styles.foodCard}>
               <Text style={styles.foodTitle}>🥣 {food.name}</Text>

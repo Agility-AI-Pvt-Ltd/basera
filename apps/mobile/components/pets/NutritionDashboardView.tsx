@@ -1,5 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PetAvatar } from '@/components/pets/PetAvatar';
 import { Text } from '@/components/Themed';
@@ -26,13 +28,16 @@ type Props = {
   pet: Pet;
   plan: PetNutritionPlan;
   selectedDate: string;
+  planDates: string[];
   dayMeals: PetNutritionMeal[];
   mealsFed: number;
   mealProgress: number;
   dayWaterCups: number;
   dayTreatCount: number;
   foodDiary: FoodDiaryEntry[];
+  onSelectDate: (date: string) => void;
   onOpenPreferences: () => void;
+  onRegenerate: () => void;
   onToggleMeal: (mealId: string, fed: boolean) => void;
   onAddWater: () => void;
   onAddTreat: () => void;
@@ -51,28 +56,40 @@ export function NutritionDashboardView({
   pet,
   plan,
   selectedDate,
+  planDates,
   dayMeals,
   mealsFed,
   mealProgress,
   dayWaterCups,
   dayTreatCount,
   foodDiary,
+  onSelectDate,
   onOpenPreferences,
+  onRegenerate,
   onToggleMeal,
   onAddWater,
   onAddTreat,
 }: Props) {
-  const waterGoal = plan.waterGoalCups ?? 6;
-  const waterProgress = Math.min(1, dayWaterCups / waterGoal);
-  const treatLimit = plan.treatLimit;
+  const waterGoal = plan.waterGoalCups;
+  const waterProgress = waterGoal ? Math.min(1, dayWaterCups / waterGoal) : 0;
+  const treatLimit = Math.min(Math.max(plan.treatLimit, 0), 10);
+  const insets = useSafeAreaInsets();
+  // The server prefixes stored guidance with its own disclaimer; show one disclaimer, not three.
+  const guidanceText = (plan.guidanceNotes ?? '').replace(/^AI guidance only[^\n]*\n+/i, '').trim();
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
+      showsVerticalScrollIndicator={false}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{pet.name}&apos;s Nutrition</Text>
           <Text style={styles.dateLabel}>{formatDateLabel(selectedDate)}</Text>
         </View>
+        <Pressable style={styles.iconBtn} onPress={onRegenerate} accessibilityLabel="Regenerate AI nutrition plan">
+          <Feather name="refresh-cw" size={18} color={BROWN} />
+        </Pressable>
         <Pressable style={styles.iconBtn} onPress={onOpenPreferences} accessibilityLabel="Nutrition preferences">
           <Feather name="settings" size={18} color={BROWN} />
         </Pressable>
@@ -82,109 +99,147 @@ export function NutritionDashboardView({
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>
           <SummaryPill emoji="🍽" label="Meals/day" value={String(plan.dailyMeals)} />
-          <SummaryPill emoji="💧" label="Water goal" value={`~${waterGoal} cups`} />
+          <SummaryPill emoji="💧" label="Water goal" value={waterGoal == null ? '—' : `~${waterGoal} cups`} />
           <SummaryPill emoji="🍖" label="Treat limit" value={`${treatLimit}/day`} />
         </View>
-        <Text style={styles.disclaimer}>{NUTRITION_DISCLAIMER}</Text>
+        {guidanceText ? null : <Text style={styles.disclaimer}>{NUTRITION_DISCLAIMER}</Text>}
       </View>
 
-      <View style={styles.progressHeader}>
-        <Text style={styles.sectionTitle}>Daily Progress</Text>
-        <Text style={styles.progressCount}>
-          {mealsFed}/{dayMeals.length} meals
-        </Text>
-      </View>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${Math.round(mealProgress * 100)}%` }]} />
-      </View>
-
-      <Text style={styles.sectionTitle}>Meals</Text>
-      {dayMeals.length === 0 ? (
-        <Text style={styles.empty}>No meals scheduled for this day.</Text>
-      ) : (
-        dayMeals.map((meal) => (
-          <View key={meal.id} style={styles.mealCard}>
-            <View style={styles.mealTop}>
-              <Text style={styles.mealEmoji}>{MEAL_TYPE_EMOJI[meal.mealType]}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.mealType}>{MEAL_TYPE_LABELS[meal.mealType]}</Text>
-                <Text style={styles.mealTime}>{formatFeedingTime(meal.scheduledTime)}</Text>
-              </View>
-            </View>
-            <Text style={styles.foodName}>🥣 {meal.foodName}</Text>
-            <Text style={styles.portion}>
-              Planned portion · {meal.plannedQuantity ?? '—'} {meal.unit}
-            </Text>
-            <Pressable
-              style={[styles.fedBtn, meal.fed && styles.fedBtnDone]}
-              onPress={() => onToggleMeal(meal.id, !meal.fed)}>
-              {meal.fed ? (
-                <>
-                  <Feather name="check" size={16} color="#FFFFFF" />
-                  <Text style={styles.fedBtnTextDone}>Fed</Text>
-                </>
-              ) : (
-                <Text style={styles.fedBtnText}>Mark Fed</Text>
-              )}
-            </Pressable>
+      {guidanceText ? (
+        <View style={styles.aiCard}>
+          <View style={styles.aiHeader}>
+            <Text style={styles.aiTitle}>✨ AI nutrition guidance</Text>
+            <Text style={styles.aiBadge}>AI</Text>
           </View>
-        ))
-      )}
-
-      <View style={styles.trackCard}>
-        <View style={styles.trackHeader}>
-          <Text style={styles.trackTitle}>💧 Water</Text>
-          <Pressable style={styles.addBtn} onPress={onAddWater}>
-            <Feather name="plus" size={16} color={GREEN} />
-            <Text style={styles.addBtnText}>Add Water</Text>
-          </Pressable>
+          <Text style={styles.aiText}>{guidanceText}</Text>
+          <Text style={styles.aiDisclaimer}>{NUTRITION_DISCLAIMER}</Text>
         </View>
-        <Text style={styles.trackSub}>Today&apos;s intake (approximate goal)</Text>
+      ) : null}
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.dateStripScroll}
+        contentContainerStyle={styles.dateStrip}>
+        {planDates.map((date) => {
+          const active = date === selectedDate;
+          const dateValue = new Date(`${date}T12:00:00`);
+          return (
+            <Pressable
+              key={date}
+              style={[styles.dateChip, active && styles.dateChipActive]}
+              onPress={() => onSelectDate(date)}>
+              <Text style={[styles.dateChipDay, active && styles.dateChipTextActive]}>
+                {dateValue.toLocaleDateString(undefined, { weekday: 'short' })}
+              </Text>
+              <Text style={[styles.dateChipDate, active && styles.dateChipTextActive]}>
+                {dateValue.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {/* Re-keyed per day so switching dates cross-fades the day's content instead of jumping. */}
+      <Animated.View key={selectedDate} entering={FadeIn.duration(220)} style={styles.dayContent}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.sectionTitle}>Daily Progress</Text>
+          <Text style={styles.progressCount}>
+            {mealsFed}/{dayMeals.length} meals
+          </Text>
+        </View>
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.round(waterProgress * 100)}%` }]} />
+          <View style={[styles.progressFill, { width: `${Math.round(mealProgress * 100)}%` }]} />
         </View>
-        <Text style={styles.trackMeta}>
-          {dayWaterCups} / ~{waterGoal} cups
-        </Text>
-      </View>
 
-      <View style={styles.trackCard}>
-        <View style={styles.trackHeader}>
-          <Text style={styles.trackTitle}>🍖 Treats</Text>
-          <Pressable style={styles.addBtn} onPress={onAddTreat}>
-            <Feather name="plus" size={16} color={GREEN} />
-            <Text style={styles.addBtnText}>Add Treat</Text>
-          </Pressable>
-        </View>
-        <Text style={styles.trackMeta}>
-          {dayTreatCount} / {treatLimit} today
-        </Text>
-        <View style={styles.treatDots}>
-          {Array.from({ length: treatLimit }, (_, i) => (
-            <View key={i} style={[styles.treatDot, i < dayTreatCount && styles.treatDotFilled]} />
-          ))}
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>Food Diary</Text>
-      <View style={styles.diaryCard}>
-        {foodDiary.length === 0 ? (
-          <Text style={styles.empty}>Nothing logged yet today.</Text>
+        <Text style={styles.sectionTitle}>Meals</Text>
+        {dayMeals.length === 0 ? (
+          <Text style={styles.empty}>No meals scheduled for this day.</Text>
         ) : (
-          foodDiary.map((entry) => (
-            <View key={entry.id} style={styles.diaryRow}>
-              <Text style={styles.diaryTime}>{entry.time}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.diaryTitle}>
-                  {entry.kind === 'meal' ? '🥣' : entry.kind === 'treat' ? '🍖' : '💧'} {entry.title}
-                </Text>
-                <Text style={styles.diarySub}>{entry.subtitle}</Text>
+          dayMeals.map((meal) => (
+            <View key={meal.id} style={styles.mealCard}>
+              <View style={styles.mealTop}>
+                <Text style={styles.mealEmoji}>{MEAL_TYPE_EMOJI[meal.mealType]}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.mealType}>{MEAL_TYPE_LABELS[meal.mealType]}</Text>
+                  <Text style={styles.mealTime}>{formatFeedingTime(meal.scheduledTime)}</Text>
+                </View>
               </View>
-              {entry.completed ? <Feather name="check-circle" size={18} color={GREEN} /> : null}
+              <Text style={styles.foodName}>🥣 {meal.foodName}</Text>
+              <Text style={styles.portion}>
+                Planned portion · {meal.plannedQuantity ?? '—'} {meal.unit}
+              </Text>
+              <Pressable
+                style={[styles.fedBtn, meal.fed && styles.fedBtnDone]}
+                onPress={() => onToggleMeal(meal.id, !meal.fed)}>
+                {meal.fed ? (
+                  <>
+                    <Feather name="check" size={16} color="#FFFFFF" />
+                    <Text style={styles.fedBtnTextDone}>Fed</Text>
+                  </>
+                ) : (
+                  <Text style={styles.fedBtnText}>Mark Fed</Text>
+                )}
+              </Pressable>
             </View>
           ))
         )}
-      </View>
+
+        <View style={styles.trackCard}>
+          <View style={styles.trackHeader}>
+            <Text style={styles.trackTitle}>💧 Water</Text>
+            <Pressable style={styles.addBtn} onPress={onAddWater}>
+              <Feather name="plus" size={16} color={GREEN} />
+              <Text style={styles.addBtnText}>Add Water</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.trackSub}>Today&apos;s intake (approximate goal)</Text>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.round(waterProgress * 100)}%` }]} />
+          </View>
+          <Text style={styles.trackMeta}>
+            {dayWaterCups} / {waterGoal == null ? '—' : `~${waterGoal} cups`}
+          </Text>
+        </View>
+
+        <View style={styles.trackCard}>
+          <View style={styles.trackHeader}>
+            <Text style={styles.trackTitle}>🍖 Treats</Text>
+            <Pressable style={styles.addBtn} onPress={onAddTreat}>
+              <Feather name="plus" size={16} color={GREEN} />
+              <Text style={styles.addBtnText}>Add Treat</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.trackMeta}>
+            {dayTreatCount} / {treatLimit} today
+          </Text>
+          <View style={styles.treatDots}>
+            {Array.from({ length: treatLimit }, (_, i) => (
+              <View key={i} style={[styles.treatDot, i < dayTreatCount && styles.treatDotFilled]} />
+            ))}
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Food Diary</Text>
+        <View style={styles.diaryCard}>
+          {foodDiary.length === 0 ? (
+            <Text style={styles.empty}>Nothing logged yet today.</Text>
+          ) : (
+            foodDiary.map((entry) => (
+              <View key={entry.id} style={styles.diaryRow}>
+                <Text style={styles.diaryTime}>{entry.time}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.diaryTitle}>
+                    {entry.kind === 'meal' ? '🥣' : entry.kind === 'treat' ? '🍖' : '💧'} {entry.title}
+                  </Text>
+                  <Text style={styles.diarySub}>{entry.subtitle}</Text>
+                </View>
+                {entry.completed ? <Feather name="check-circle" size={18} color={GREEN} /> : null}
+              </View>
+            ))
+          )}
+        </View>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -220,6 +275,42 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   summaryRow: { flexDirection: 'row', gap: 8 },
+  dateStripScroll: { marginHorizontal: -16, flexGrow: 0 },
+  dayContent: { gap: 12 },
+  dateStrip: { gap: 8, paddingHorizontal: 16 },
+  dateChip: {
+    minWidth: 64,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  dateChipActive: { backgroundColor: GREEN },
+  dateChipDay: { fontSize: 11, color: '#78716C', fontWeight: '600' },
+  dateChipDate: { fontSize: 12, color: BROWN, marginTop: 2 },
+  dateChipTextActive: { color: '#FFFFFF' },
+  aiCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    padding: 14,
+    gap: 8,
+  },
+  aiHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  aiTitle: { fontSize: 15, fontWeight: '700', color: '#166534' },
+  aiBadge: {
+    color: '#166534',
+    backgroundColor: '#DCFCE7',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  aiText: { fontSize: 13, color: '#14532D', lineHeight: 19 },
+  aiDisclaimer: { fontSize: 11, color: '#166534', lineHeight: 16 },
   pill: {
     flex: 1,
     backgroundColor: CREAM,

@@ -22,6 +22,10 @@ import { getSignupRoute } from '@/types/profile';
 
 SplashScreen.preventAutoHideAsync();
 
+// Screens are designed light-only (hard-coded light backgrounds). The navigator must paint the
+// same colour behind them, otherwise DarkTheme's near-black background flashes during transitions.
+const APP_BACKGROUND = '#F9FAFB';
+
 export default function App() {
   const [loaded, error] = useFonts({
     Sniglet_400Regular,
@@ -56,6 +60,7 @@ function RootNavigator() {
   const baseTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
   const theme = {
     ...baseTheme,
+    colors: { ...baseTheme.colors, background: APP_BACKGROUND },
     fonts: {
       regular: { fontFamily: FONT_FAMILY, fontWeight: '200' as const },
       medium: { fontFamily: FONT_FAMILY, fontWeight: '200' as const },
@@ -84,7 +89,7 @@ function RootNavigator() {
   let content: ReactNode;
   if (showBootstrapLoader) {
     content = (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: APP_BACKGROUND }}>
         <ActivityIndicator size="large" color="#A78BFA" />
       </View>
     );
@@ -98,7 +103,7 @@ function RootNavigator() {
     content = <MainTabs />;
   } else {
     content = (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: APP_BACKGROUND }}>
         <ActivityIndicator size="large" color="#A78BFA" />
       </View>
     );
