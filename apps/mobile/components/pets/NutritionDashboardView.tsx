@@ -26,13 +26,16 @@ type Props = {
   pet: Pet;
   plan: PetNutritionPlan;
   selectedDate: string;
+  planDates: string[];
   dayMeals: PetNutritionMeal[];
   mealsFed: number;
   mealProgress: number;
   dayWaterCups: number;
   dayTreatCount: number;
   foodDiary: FoodDiaryEntry[];
+  onSelectDate: (date: string) => void;
   onOpenPreferences: () => void;
+  onRegenerate: () => void;
   onToggleMeal: (mealId: string, fed: boolean) => void;
   onAddWater: () => void;
   onAddTreat: () => void;
@@ -51,20 +54,23 @@ export function NutritionDashboardView({
   pet,
   plan,
   selectedDate,
+  planDates,
   dayMeals,
   mealsFed,
   mealProgress,
   dayWaterCups,
   dayTreatCount,
   foodDiary,
+  onSelectDate,
   onOpenPreferences,
+  onRegenerate,
   onToggleMeal,
   onAddWater,
   onAddTreat,
 }: Props) {
-  const waterGoal = plan.waterGoalCups ?? 6;
-  const waterProgress = Math.min(1, dayWaterCups / waterGoal);
-  const treatLimit = plan.treatLimit;
+  const waterGoal = plan.waterGoalCups;
+  const waterProgress = waterGoal ? Math.min(1, dayWaterCups / waterGoal) : 0;
+  const treatLimit = Math.min(Math.max(plan.treatLimit, 0), 10);
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -73,6 +79,9 @@ export function NutritionDashboardView({
           <Text style={styles.title}>{pet.name}&apos;s Nutrition</Text>
           <Text style={styles.dateLabel}>{formatDateLabel(selectedDate)}</Text>
         </View>
+        <Pressable style={styles.iconBtn} onPress={onRegenerate} accessibilityLabel="Regenerate AI nutrition plan">
+          <Feather name="refresh-cw" size={18} color={BROWN} />
+        </Pressable>
         <Pressable style={styles.iconBtn} onPress={onOpenPreferences} accessibilityLabel="Nutrition preferences">
           <Feather name="settings" size={18} color={BROWN} />
         </Pressable>
@@ -82,11 +91,42 @@ export function NutritionDashboardView({
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>
           <SummaryPill emoji="🍽" label="Meals/day" value={String(plan.dailyMeals)} />
-          <SummaryPill emoji="💧" label="Water goal" value={`~${waterGoal} cups`} />
+          <SummaryPill emoji="💧" label="Water goal" value={waterGoal == null ? '—' : `~${waterGoal} cups`} />
           <SummaryPill emoji="🍖" label="Treat limit" value={`${treatLimit}/day`} />
         </View>
         <Text style={styles.disclaimer}>{NUTRITION_DISCLAIMER}</Text>
       </View>
+
+      {plan.guidanceNotes ? (
+        <View style={styles.aiCard}>
+          <View style={styles.aiHeader}>
+            <Text style={styles.aiTitle}>✨ AI nutrition guidance</Text>
+            <Text style={styles.aiBadge}>AI</Text>
+          </View>
+          <Text style={styles.aiText}>{plan.guidanceNotes}</Text>
+          <Text style={styles.aiDisclaimer}>{NUTRITION_DISCLAIMER}</Text>
+        </View>
+      ) : null}
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateStrip}>
+        {planDates.map((date) => {
+          const active = date === selectedDate;
+          const dateValue = new Date(`${date}T12:00:00`);
+          return (
+            <Pressable
+              key={date}
+              style={[styles.dateChip, active && styles.dateChipActive]}
+              onPress={() => onSelectDate(date)}>
+              <Text style={[styles.dateChipDay, active && styles.dateChipTextActive]}>
+                {dateValue.toLocaleDateString(undefined, { weekday: 'short' })}
+              </Text>
+              <Text style={[styles.dateChipDate, active && styles.dateChipTextActive]}>
+                {dateValue.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
       <View style={styles.progressHeader}>
         <Text style={styles.sectionTitle}>Daily Progress</Text>
@@ -144,7 +184,7 @@ export function NutritionDashboardView({
           <View style={[styles.progressFill, { width: `${Math.round(waterProgress * 100)}%` }]} />
         </View>
         <Text style={styles.trackMeta}>
-          {dayWaterCups} / ~{waterGoal} cups
+          {dayWaterCups} / {waterGoal == null ? '—' : `~${waterGoal} cups`}
         </Text>
       </View>
 
@@ -220,6 +260,40 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   summaryRow: { flexDirection: 'row', gap: 8 },
+  dateStrip: { gap: 8 },
+  dateChip: {
+    minWidth: 64,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  dateChipActive: { backgroundColor: GREEN },
+  dateChipDay: { fontSize: 11, color: '#78716C', fontWeight: '600' },
+  dateChipDate: { fontSize: 12, color: BROWN, marginTop: 2 },
+  dateChipTextActive: { color: '#FFFFFF' },
+  aiCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    padding: 14,
+    gap: 8,
+  },
+  aiHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  aiTitle: { fontSize: 15, fontWeight: '700', color: '#166534' },
+  aiBadge: {
+    color: '#166534',
+    backgroundColor: '#DCFCE7',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  aiText: { fontSize: 13, color: '#14532D', lineHeight: 19 },
+  aiDisclaimer: { fontSize: 11, color: '#166534', lineHeight: 16 },
   pill: {
     flex: 1,
     backgroundColor: CREAM,

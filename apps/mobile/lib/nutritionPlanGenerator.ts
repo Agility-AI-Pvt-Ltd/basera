@@ -90,6 +90,8 @@ export function buildPlanSummary(
     waterGoalCups: softWaterGoalCups(pet),
     guidanceNotes:
       'Portions are estimates based on your inputs. Adjust with your veterinarian for medical or therapeutic diets.',
+    source: 'rule_based',
+    model: null,
   };
 }
 

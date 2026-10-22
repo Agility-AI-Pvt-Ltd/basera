@@ -408,6 +408,16 @@ function NutritionTab({
   onStartOnboarding: () => void;
   onOpenPreferences: () => void;
 }) {
+  if (nutrition.error) {
+    return (
+      <View style={styles.nutritionOnboard}>
+        <Text style={styles.nutritionOnboardTitle}>Nutrition data could not be loaded</Text>
+        <Text style={styles.nutritionOnboardBody}>{nutrition.error}</Text>
+        <PrimaryButton label="Try again" onPress={() => void nutrition.reload()} />
+      </View>
+    );
+  }
+
   if (!nutrition.isReady || nutrition.loading) {
     return (
       <View style={styles.trainingCenter}>
@@ -439,13 +449,16 @@ function NutritionTab({
       pet={pet}
       plan={nutrition.plan}
       selectedDate={nutrition.selectedDate}
+      planDates={nutrition.planDates}
       dayMeals={nutrition.dayMeals}
       mealsFed={nutrition.mealsFed}
       mealProgress={nutrition.mealProgress}
       dayWaterCups={nutrition.dayWaterCups}
       dayTreatCount={nutrition.dayTreatCount}
       foodDiary={nutrition.foodDiary}
+      onSelectDate={nutrition.setSelectedDate}
       onOpenPreferences={onOpenPreferences}
+      onRegenerate={() => void nutrition.generatePlan().catch(() => undefined)}
       onToggleMeal={nutrition.toggleMealFed}
       onAddWater={() => void nutrition.addWater(1)}
       onAddTreat={() => void nutrition.addTreat('Training treat', 1)}
