@@ -260,14 +260,15 @@ a {
     background 0.15s;
 }
 
-.store-badge--play:hover {
-  transform: translateY(-2px);
-  background: #0f172a;
+.store-badge__logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
-.store-badge--apple {
-  opacity: 0.72;
-  cursor: not-allowed;
+.store-badge--soon {
+  cursor: default;
 }
 
 .store-badge__soon {
