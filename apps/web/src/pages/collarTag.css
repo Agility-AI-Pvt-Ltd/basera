@@ -692,6 +692,123 @@
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
 }
 
+.tag-field-optional {
+  font-weight: 400;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.tag-field-hint {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  line-height: 1.3;
+}
+
+/* Photo Capture & Upload Dropzone */
+.tag-photo-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1rem 1rem;
+  background: #fdfcff;
+  border: 1.5px dashed rgba(124, 58, 237, 0.35);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.tag-photo-dropzone:hover,
+.tag-photo-dropzone:focus-visible {
+  background: #f5f3ff;
+  border-color: var(--purple-600);
+}
+
+.tag-photo-dropzone__icon-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--purple-600);
+  margin-bottom: 0.35rem;
+}
+
+.tag-photo-dropzone__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--purple-900);
+}
+
+.tag-photo-dropzone__sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.tag-photo-preview-wrap {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--purple-600);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+  flex-shrink: 0;
+}
+
+.tag-photo-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tag-photo-remove-btn {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.tag-photo-remove-btn:hover {
+  background: #dc2626;
+}
+
+.tag-photo-retake-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f5f3ff;
+  color: var(--purple-700);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tag-photo-retake-btn:hover {
+  background: #ede9fe;
+  border-color: var(--purple-600);
+  color: var(--purple-800);
+}
+
 .tag-checkbox-group {
   display: flex;
   flex-wrap: wrap;

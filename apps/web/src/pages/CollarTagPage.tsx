@@ -3,6 +3,7 @@ import {
   AlertCircle,
   ArrowRight,
   Calendar,
+  Camera,
   CheckCircle2,
   Compass,
   Eye,
@@ -19,10 +20,12 @@ import {
   ShieldCheck,
   Sparkles,
   Tag,
+  Upload,
   Users,
   Utensils,
+  X,
 } from 'lucide-react';
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { supabase } from '../lib/supabase';
@@ -85,11 +88,54 @@ export function CollarTagPage() {
   const [pairEarNotched, setPairEarNotched] = useState(true);
   const [pairCaregiver, setPairCaregiver] = useState('');
   const [pairPhotoUrl, setPairPhotoUrl] = useState('');
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [pairVaxName, setPairVaxName] = useState('Anti-Rabies Vaccine (ARV)');
   const [pairDriveName, setPairDriveName] = useState('Community Vaccination Drive');
   const [pairBatchNo, setPairBatchNo] = useState('');
   const [pairingSubmitting, setPairingSubmitting] = useState(false);
   const [pairError, setPairError] = useState<string | null>(null);
+
+  // Client-side image compressor & preview generator
+  const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const rawUrl = event.target?.result as string;
+      const img = new window.Image();
+      img.onload = () => {
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          setPhotoPreview(compressed);
+        } else {
+          setPhotoPreview(rawUrl);
+        }
+      };
+      img.src = rawUrl;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Community log form state
   const [logType, setLogType] = useState<AnimalLog['log_type']>('feeding');
@@ -211,6 +257,39 @@ export function CollarTagPage() {
     const validUntil = validUntilDate.toISOString().slice(0, 10);
 
     try {
+      let finalPhotoUrl = pairPhotoUrl.trim() || null;
+
+      if (photoPreview) {
+        setPhotoUploading(true);
+        try {
+          const fileName = `${activeCode.toLowerCase()}_${Date.now()}.jpg`;
+          const filePath = `community-animals/${fileName}`;
+
+          const res = await fetch(photoPreview);
+          const blob = await res.blob();
+
+          const { error: uploadErr } = await supabase.storage
+            .from('community-media')
+            .upload(filePath, blob, {
+              contentType: 'image/jpeg',
+              upsert: true,
+            });
+
+          if (!uploadErr) {
+            const { data: pubData } = supabase.storage
+              .from('community-media')
+              .getPublicUrl(filePath);
+            finalPhotoUrl = pubData.publicUrl;
+          } else {
+            finalPhotoUrl = photoPreview;
+          }
+        } catch {
+          finalPhotoUrl = photoPreview;
+        } finally {
+          setPhotoUploading(false);
+        }
+      }
+
       let targetAnimalId = animal?.id;
 
       if (targetAnimalId) {
@@ -225,7 +304,7 @@ export function CollarTagPage() {
             is_sterilized: pairSterilized,
             ear_notched: pairEarNotched,
             caregiver_contact: pairCaregiver.trim() || null,
-            photo_url: pairPhotoUrl.trim() || null,
+            photo_url: finalPhotoUrl,
             status: 'active',
             last_seen_location: pairTerritory.trim() || null,
             last_seen_at: new Date().toISOString(),
@@ -247,7 +326,7 @@ export function CollarTagPage() {
             is_sterilized: pairSterilized,
             ear_notched: pairEarNotched,
             caregiver_contact: pairCaregiver.trim() || null,
-            photo_url: pairPhotoUrl.trim() || null,
+            photo_url: finalPhotoUrl,
             status: 'active',
             last_seen_location: pairTerritory.trim() || null,
             last_seen_at: new Date().toISOString(),
@@ -287,6 +366,9 @@ export function CollarTagPage() {
       // Reload
       setIsPairingNew(false);
       setNotFound(false);
+      setPhotoPreview(null);
+      setPairPhotoUrl('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       await fetchAnimalData(activeCode);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Could not activate tag.';
@@ -859,27 +941,74 @@ export function CollarTagPage() {
 
               <div className="tag-pair-row tag-pair-row--2">
                 <div className="tag-field-group">
-                  <label htmlFor="pair-caregiver">Local Feeder / Caregiver Contact</label>
+                  <label htmlFor="pair-caregiver">
+                    Local Feeder / Caregiver Phone <span className="tag-field-optional">(Optional)</span>
+                  </label>
                   <input
                     id="pair-caregiver"
-                    type="text"
+                    type="tel"
                     className="tag-field-input"
                     value={pairCaregiver}
                     onChange={(e) => setPairCaregiver(e.target.value)}
-                    placeholder="e.g. +91 98200 12345 (Renu)"
+                    placeholder="e.g. +91 98200 12345 (Leave blank if none)"
                   />
+                  <span className="tag-field-hint">Optional: Can be linked or updated later by community feeders.</span>
                 </div>
 
                 <div className="tag-field-group">
-                  <label htmlFor="pair-photo">Photo URL (optional)</label>
+                  <label>
+                    Animal Photo <span className="tag-field-optional">(Optional)</span>
+                  </label>
                   <input
-                    id="pair-photo"
-                    type="url"
-                    className="tag-field-input"
-                    value={pairPhotoUrl}
-                    onChange={(e) => setPairPhotoUrl(e.target.value)}
-                    placeholder="https://..."
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={handleImageSelect}
                   />
+
+                  {!photoPreview ? (
+                    <div
+                      className="tag-photo-dropzone"
+                      onClick={() => fileInputRef.current?.click()}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="tag-photo-dropzone__icon-row">
+                        <Camera size={22} />
+                        <Upload size={18} />
+                      </div>
+                      <p className="tag-photo-dropzone__title">Click / Upload Photo</p>
+                      <p className="tag-photo-dropzone__sub">Snap with camera or pick from gallery</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+                      <div className="tag-photo-preview-wrap">
+                        <img src={photoPreview} alt="Animal Preview" className="tag-photo-preview-img" />
+                        <button
+                          type="button"
+                          className="tag-photo-remove-btn"
+                          onClick={() => {
+                            setPhotoPreview(null);
+                            setPairPhotoUrl('');
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }}
+                          title="Remove photo"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="tag-photo-retake-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Camera size={14} />
+                        <span>Retake / Change Photo</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -935,11 +1064,13 @@ export function CollarTagPage() {
               <button
                 type="submit"
                 className="tag-pair-submit-btn"
-                disabled={pairingSubmitting}
+                disabled={pairingSubmitting || photoUploading}
               >
                 <PlusCircle size={18} />
                 <span>
-                  {pairingSubmitting
+                  {photoUploading
+                    ? 'Uploading Photo...'
+                    : pairingSubmitting
                     ? 'Activating Collar...'
                     : 'Activate & Pair Collar Tag'}
                 </span>
