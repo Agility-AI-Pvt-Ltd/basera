@@ -99,17 +99,25 @@ export function CollarTagPage() {
   const [submittingLog, setSubmittingLog] = useState(false);
   const [logMessage, setLogMessage] = useState<string | null>(null);
 
+  // New tag pairing state (allows feeding details for any scanned tag even if not pre-seeded)
+  const [isPairingNew, setIsPairingNew] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+
   const cleanCode = (tagCode || '').trim().toUpperCase();
 
   const fetchAnimalData = useCallback(async (code: string) => {
     if (!code) {
       setAnimal(null);
       setNotFound(false);
+      setIsPairingNew(false);
+      setDbError(null);
       return;
     }
 
     setLoading(true);
     setNotFound(false);
+    setIsPairingNew(false);
+    setDbError(null);
 
     try {
       // 1. Fetch animal
@@ -119,7 +127,19 @@ export function CollarTagPage() {
         .ilike('tag_code', code)
         .maybeSingle();
 
-      if (animalErr || !animalData) {
+      if (animalErr) {
+        setAnimal(null);
+        setNotFound(true);
+        if (animalErr.code === '42501') {
+          setDbError('Database permission error: Please ensure GRANT ALL ON TABLE community_animals has been run in Supabase SQL editor.');
+        } else {
+          setDbError(animalErr.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (!animalData) {
         setAnimal(null);
         setNotFound(true);
         setLoading(false);
@@ -176,10 +196,11 @@ export function CollarTagPage() {
     }
   };
 
-  // Phase 2 Option A: Field Volunteer Fast Pairing
+  // Phase 2 Option A: Field Volunteer Fast Pairing (works for unassigned AND new tags)
   const handlePairSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!animal) return;
+    const activeCode = animal?.tag_code || cleanCode;
+    if (!activeCode) return;
 
     setPairingSubmitting(true);
     setPairError(null);
@@ -190,33 +211,60 @@ export function CollarTagPage() {
     const validUntil = validUntilDate.toISOString().slice(0, 10);
 
     try {
-      // 1. Activate animal
-      const { error: animalErr } = await supabase
-        .from('community_animals')
-        .update({
-          name: pairName.trim() || `Community Dog #${animal.tag_code}`,
-          gender: pairGender,
-          territory: pairTerritory.trim(),
-          city: pairCity.trim(),
-          is_sterilized: pairSterilized,
-          ear_notched: pairEarNotched,
-          caregiver_contact: pairCaregiver.trim() || null,
-          photo_url: pairPhotoUrl.trim() || null,
-          status: 'active',
-          last_seen_location: pairTerritory.trim() || null,
-          last_seen_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', animal.id);
+      let targetAnimalId = animal?.id;
 
-      if (animalErr) throw animalErr;
+      if (targetAnimalId) {
+        // 1a. Update existing unassigned animal
+        const { error: animalErr } = await supabase
+          .from('community_animals')
+          .update({
+            name: pairName.trim() || `Community Dog #${activeCode}`,
+            gender: pairGender,
+            territory: pairTerritory.trim(),
+            city: pairCity.trim(),
+            is_sterilized: pairSterilized,
+            ear_notched: pairEarNotched,
+            caregiver_contact: pairCaregiver.trim() || null,
+            photo_url: pairPhotoUrl.trim() || null,
+            status: 'active',
+            last_seen_location: pairTerritory.trim() || null,
+            last_seen_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', targetAnimalId);
+
+        if (animalErr) throw animalErr;
+      } else {
+        // 1b. Insert new animal record on the fly for this tag code!
+        const { data: newAnimal, error: insertErr } = await supabase
+          .from('community_animals')
+          .insert({
+            tag_code: activeCode,
+            name: pairName.trim() || `Community Dog #${activeCode}`,
+            gender: pairGender,
+            territory: pairTerritory.trim(),
+            city: pairCity.trim(),
+            is_sterilized: pairSterilized,
+            ear_notched: pairEarNotched,
+            caregiver_contact: pairCaregiver.trim() || null,
+            photo_url: pairPhotoUrl.trim() || null,
+            status: 'active',
+            last_seen_location: pairTerritory.trim() || null,
+            last_seen_at: new Date().toISOString(),
+          })
+          .select('id, tag_code')
+          .single();
+
+        if (insertErr) throw insertErr;
+        targetAnimalId = newAnimal.id;
+      }
 
       // 2. Insert initial vaccination record
       if (pairVaxName.trim()) {
         const { error: vaxErr } = await supabase
           .from('community_animal_vaccinations')
           .insert({
-            animal_id: animal.id,
+            animal_id: targetAnimalId,
             vaccine_name: pairVaxName.trim(),
             administered_date: today,
             valid_until: validUntil,
@@ -229,7 +277,7 @@ export function CollarTagPage() {
 
       // 3. Log pairing activation
       await supabase.from('community_animal_logs').insert({
-        animal_id: animal.id,
+        animal_id: targetAnimalId,
         log_type: 'sighting',
         body: 'Collar tag fitted and vaccinated during community drive.',
         reporter_name: 'Drive Volunteer',
@@ -237,7 +285,9 @@ export function CollarTagPage() {
       });
 
       // Reload
-      await fetchAnimalData(animal.tag_code);
+      setIsPairingNew(false);
+      setNotFound(false);
+      await fetchAnimalData(activeCode);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Could not activate tag.';
       setPairError(message);
@@ -322,19 +372,48 @@ export function CollarTagPage() {
           </div>
         )}
 
-        {/* Not Found State */}
-        {!loading && notFound && (
+        {/* Not Found State -> Now provides direct button to feed details! */}
+        {!loading && notFound && !isPairingNew && (
           <div className="tag-empty-state">
-            <AlertCircle size={44} color="#DC2626" />
-            <h2>Tag Not Found</h2>
+            <div style={{ display: 'inline-flex', marginBottom: '0.75rem' }}>
+              <span className="pill pill--sterilized">
+                <Tag size={13} />
+                <span>Collar Tag: {cleanCode}</span>
+              </span>
+            </div>
+            <h2>Collar Tag Not Yet Registered</h2>
             <p>
-              We could not find an animal linked to tag code{' '}
-              <strong>"{cleanCode}"</strong>. Check the collar code or contact the
-              local animal drive coordinator.
+              Tag <strong>"{cleanCode}"</strong> is not linked to an animal in our database yet.
+              Fitting this collar during a vaccination drive? You can enter details and activate it live right now.
             </p>
-            <Link to="/tag" className="tag-nav__btn">
-              Try Another Tag
-            </Link>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1.25rem' }}>
+              <button
+                type="button"
+                className="tag-nav__btn"
+                style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}
+                onClick={() => {
+                  setPairName(`Community Dog #${cleanCode}`);
+                  setIsPairingNew(true);
+                  setNotFound(false);
+                }}
+              >
+                <PlusCircle size={16} />
+                <span>Feed Details & Register Animal</span>
+              </button>
+              <Link to="/tag" className="tag-nav__btn" style={{ background: '#475569' }}>
+                Lookup Another Tag
+              </Link>
+            </div>
+            {dbError && (
+              <div style={{ marginTop: '1.5rem', textAlign: 'left', background: '#fef2f2', padding: '1rem', borderRadius: '12px', border: '1px solid #fecaca' }}>
+                <p style={{ color: '#b91c1c', fontWeight: 600, margin: '0 0 0.4rem', fontSize: '0.9rem' }}>
+                  Database Setup Required
+                </p>
+                <p style={{ color: '#7f1d1d', margin: 0, fontSize: '0.82rem', lineHeight: 1.5 }}>
+                  {dbError}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -669,14 +748,28 @@ export function CollarTagPage() {
           </div>
         )}
 
-        {/* Phase 2 Option A: Unassigned Tag -> Field Pairing Form */}
-        {!loading && animal && animal.status === 'unassigned' && (
+        {/* Phase 2 Option A: Unassigned Tag OR User Feeding Details on New Tag */}
+        {!loading && ((animal && animal.status === 'unassigned') || isPairingNew) && (
           <div className="tag-pair-card">
             <div className="tag-pair-header">
-              <span className="pill pill--sterilized">
-                <Tag size={13} />
-                <span>Collar Tag: {animal.tag_code}</span>
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span className="pill pill--sterilized">
+                  <Tag size={13} />
+                  <span>Collar Tag: {animal?.tag_code || cleanCode}</span>
+                </span>
+                {isPairingNew && (
+                  <button
+                    type="button"
+                    className="pill pill--territory"
+                    onClick={() => {
+                      setIsPairingNew(false);
+                      setNotFound(true);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
               <h2>Field Vaccination Drive Intake</h2>
               <p>
                 This collar tag is ready to pair. Enter animal details to link and
