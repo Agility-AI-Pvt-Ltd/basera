@@ -1,5 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PetAvatar } from '@/components/pets/PetAvatar';
 import { Text } from '@/components/Themed';
@@ -71,9 +73,15 @@ export function NutritionDashboardView({
   const waterGoal = plan.waterGoalCups;
   const waterProgress = waterGoal ? Math.min(1, dayWaterCups / waterGoal) : 0;
   const treatLimit = Math.min(Math.max(plan.treatLimit, 0), 10);
+  const insets = useSafeAreaInsets();
+  // The server prefixes stored guidance with its own disclaimer; show one disclaimer, not three.
+  const guidanceText = (plan.guidanceNotes ?? '').replace(/^AI guidance only[^\n]*\n+/i, '').trim();
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
+      showsVerticalScrollIndicator={false}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{pet.name}&apos;s Nutrition</Text>
@@ -94,21 +102,25 @@ export function NutritionDashboardView({
           <SummaryPill emoji="💧" label="Water goal" value={waterGoal == null ? '—' : `~${waterGoal} cups`} />
           <SummaryPill emoji="🍖" label="Treat limit" value={`${treatLimit}/day`} />
         </View>
-        <Text style={styles.disclaimer}>{NUTRITION_DISCLAIMER}</Text>
+        {guidanceText ? null : <Text style={styles.disclaimer}>{NUTRITION_DISCLAIMER}</Text>}
       </View>
 
-      {plan.guidanceNotes ? (
+      {guidanceText ? (
         <View style={styles.aiCard}>
           <View style={styles.aiHeader}>
             <Text style={styles.aiTitle}>✨ AI nutrition guidance</Text>
             <Text style={styles.aiBadge}>AI</Text>
           </View>
-          <Text style={styles.aiText}>{plan.guidanceNotes}</Text>
+          <Text style={styles.aiText}>{guidanceText}</Text>
           <Text style={styles.aiDisclaimer}>{NUTRITION_DISCLAIMER}</Text>
         </View>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateStrip}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.dateStripScroll}
+        contentContainerStyle={styles.dateStrip}>
         {planDates.map((date) => {
           const active = date === selectedDate;
           const dateValue = new Date(`${date}T12:00:00`);
@@ -128,103 +140,106 @@ export function NutritionDashboardView({
         })}
       </ScrollView>
 
-      <View style={styles.progressHeader}>
-        <Text style={styles.sectionTitle}>Daily Progress</Text>
-        <Text style={styles.progressCount}>
-          {mealsFed}/{dayMeals.length} meals
-        </Text>
-      </View>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${Math.round(mealProgress * 100)}%` }]} />
-      </View>
-
-      <Text style={styles.sectionTitle}>Meals</Text>
-      {dayMeals.length === 0 ? (
-        <Text style={styles.empty}>No meals scheduled for this day.</Text>
-      ) : (
-        dayMeals.map((meal) => (
-          <View key={meal.id} style={styles.mealCard}>
-            <View style={styles.mealTop}>
-              <Text style={styles.mealEmoji}>{MEAL_TYPE_EMOJI[meal.mealType]}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.mealType}>{MEAL_TYPE_LABELS[meal.mealType]}</Text>
-                <Text style={styles.mealTime}>{formatFeedingTime(meal.scheduledTime)}</Text>
-              </View>
-            </View>
-            <Text style={styles.foodName}>🥣 {meal.foodName}</Text>
-            <Text style={styles.portion}>
-              Planned portion · {meal.plannedQuantity ?? '—'} {meal.unit}
-            </Text>
-            <Pressable
-              style={[styles.fedBtn, meal.fed && styles.fedBtnDone]}
-              onPress={() => onToggleMeal(meal.id, !meal.fed)}>
-              {meal.fed ? (
-                <>
-                  <Feather name="check" size={16} color="#FFFFFF" />
-                  <Text style={styles.fedBtnTextDone}>Fed</Text>
-                </>
-              ) : (
-                <Text style={styles.fedBtnText}>Mark Fed</Text>
-              )}
-            </Pressable>
-          </View>
-        ))
-      )}
-
-      <View style={styles.trackCard}>
-        <View style={styles.trackHeader}>
-          <Text style={styles.trackTitle}>💧 Water</Text>
-          <Pressable style={styles.addBtn} onPress={onAddWater}>
-            <Feather name="plus" size={16} color={GREEN} />
-            <Text style={styles.addBtnText}>Add Water</Text>
-          </Pressable>
+      {/* Re-keyed per day so switching dates cross-fades the day's content instead of jumping. */}
+      <Animated.View key={selectedDate} entering={FadeIn.duration(220)} style={styles.dayContent}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.sectionTitle}>Daily Progress</Text>
+          <Text style={styles.progressCount}>
+            {mealsFed}/{dayMeals.length} meals
+          </Text>
         </View>
-        <Text style={styles.trackSub}>Today&apos;s intake (approximate goal)</Text>
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.round(waterProgress * 100)}%` }]} />
+          <View style={[styles.progressFill, { width: `${Math.round(mealProgress * 100)}%` }]} />
         </View>
-        <Text style={styles.trackMeta}>
-          {dayWaterCups} / {waterGoal == null ? '—' : `~${waterGoal} cups`}
-        </Text>
-      </View>
 
-      <View style={styles.trackCard}>
-        <View style={styles.trackHeader}>
-          <Text style={styles.trackTitle}>🍖 Treats</Text>
-          <Pressable style={styles.addBtn} onPress={onAddTreat}>
-            <Feather name="plus" size={16} color={GREEN} />
-            <Text style={styles.addBtnText}>Add Treat</Text>
-          </Pressable>
-        </View>
-        <Text style={styles.trackMeta}>
-          {dayTreatCount} / {treatLimit} today
-        </Text>
-        <View style={styles.treatDots}>
-          {Array.from({ length: treatLimit }, (_, i) => (
-            <View key={i} style={[styles.treatDot, i < dayTreatCount && styles.treatDotFilled]} />
-          ))}
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>Food Diary</Text>
-      <View style={styles.diaryCard}>
-        {foodDiary.length === 0 ? (
-          <Text style={styles.empty}>Nothing logged yet today.</Text>
+        <Text style={styles.sectionTitle}>Meals</Text>
+        {dayMeals.length === 0 ? (
+          <Text style={styles.empty}>No meals scheduled for this day.</Text>
         ) : (
-          foodDiary.map((entry) => (
-            <View key={entry.id} style={styles.diaryRow}>
-              <Text style={styles.diaryTime}>{entry.time}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.diaryTitle}>
-                  {entry.kind === 'meal' ? '🥣' : entry.kind === 'treat' ? '🍖' : '💧'} {entry.title}
-                </Text>
-                <Text style={styles.diarySub}>{entry.subtitle}</Text>
+          dayMeals.map((meal) => (
+            <View key={meal.id} style={styles.mealCard}>
+              <View style={styles.mealTop}>
+                <Text style={styles.mealEmoji}>{MEAL_TYPE_EMOJI[meal.mealType]}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.mealType}>{MEAL_TYPE_LABELS[meal.mealType]}</Text>
+                  <Text style={styles.mealTime}>{formatFeedingTime(meal.scheduledTime)}</Text>
+                </View>
               </View>
-              {entry.completed ? <Feather name="check-circle" size={18} color={GREEN} /> : null}
+              <Text style={styles.foodName}>🥣 {meal.foodName}</Text>
+              <Text style={styles.portion}>
+                Planned portion · {meal.plannedQuantity ?? '—'} {meal.unit}
+              </Text>
+              <Pressable
+                style={[styles.fedBtn, meal.fed && styles.fedBtnDone]}
+                onPress={() => onToggleMeal(meal.id, !meal.fed)}>
+                {meal.fed ? (
+                  <>
+                    <Feather name="check" size={16} color="#FFFFFF" />
+                    <Text style={styles.fedBtnTextDone}>Fed</Text>
+                  </>
+                ) : (
+                  <Text style={styles.fedBtnText}>Mark Fed</Text>
+                )}
+              </Pressable>
             </View>
           ))
         )}
-      </View>
+
+        <View style={styles.trackCard}>
+          <View style={styles.trackHeader}>
+            <Text style={styles.trackTitle}>💧 Water</Text>
+            <Pressable style={styles.addBtn} onPress={onAddWater}>
+              <Feather name="plus" size={16} color={GREEN} />
+              <Text style={styles.addBtnText}>Add Water</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.trackSub}>Today&apos;s intake (approximate goal)</Text>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.round(waterProgress * 100)}%` }]} />
+          </View>
+          <Text style={styles.trackMeta}>
+            {dayWaterCups} / {waterGoal == null ? '—' : `~${waterGoal} cups`}
+          </Text>
+        </View>
+
+        <View style={styles.trackCard}>
+          <View style={styles.trackHeader}>
+            <Text style={styles.trackTitle}>🍖 Treats</Text>
+            <Pressable style={styles.addBtn} onPress={onAddTreat}>
+              <Feather name="plus" size={16} color={GREEN} />
+              <Text style={styles.addBtnText}>Add Treat</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.trackMeta}>
+            {dayTreatCount} / {treatLimit} today
+          </Text>
+          <View style={styles.treatDots}>
+            {Array.from({ length: treatLimit }, (_, i) => (
+              <View key={i} style={[styles.treatDot, i < dayTreatCount && styles.treatDotFilled]} />
+            ))}
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Food Diary</Text>
+        <View style={styles.diaryCard}>
+          {foodDiary.length === 0 ? (
+            <Text style={styles.empty}>Nothing logged yet today.</Text>
+          ) : (
+            foodDiary.map((entry) => (
+              <View key={entry.id} style={styles.diaryRow}>
+                <Text style={styles.diaryTime}>{entry.time}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.diaryTitle}>
+                    {entry.kind === 'meal' ? '🥣' : entry.kind === 'treat' ? '🍖' : '💧'} {entry.title}
+                  </Text>
+                  <Text style={styles.diarySub}>{entry.subtitle}</Text>
+                </View>
+                {entry.completed ? <Feather name="check-circle" size={18} color={GREEN} /> : null}
+              </View>
+            ))
+          )}
+        </View>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -260,7 +275,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   summaryRow: { flexDirection: 'row', gap: 8 },
-  dateStrip: { gap: 8 },
+  dateStripScroll: { marginHorizontal: -16, flexGrow: 0 },
+  dayContent: { gap: 12 },
+  dateStrip: { gap: 8, paddingHorizontal: 16 },
   dateChip: {
     minWidth: 64,
     paddingHorizontal: 10,

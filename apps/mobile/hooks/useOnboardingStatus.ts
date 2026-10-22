@@ -4,6 +4,12 @@ import { Platform } from 'react-native';
 
 import { ONBOARDING_COMPLETE_KEY } from '@/constants/StorageKeys';
 
+type OnboardingListener = (completed: boolean) => void;
+
+// App.tsx and the onboarding screens each use this hook. Keep their in-memory
+// state synchronized when one of them changes the persisted onboarding flag.
+const listeners = new Set<OnboardingListener>();
+
 async function readOnboardingComplete(): Promise<boolean> {
   try {
     if (Platform.OS === 'web') {
@@ -40,6 +46,16 @@ export function useOnboardingStatus() {
   const [hasCompleted, setHasCompleted] = useState(false);
 
   useEffect(() => {
+    const listener: OnboardingListener = (completed) => {
+      setHasCompleted(completed);
+    };
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+
+  useEffect(() => {
     readOnboardingComplete()
       .then(setHasCompleted)
       .finally(() => {
@@ -50,11 +66,13 @@ export function useOnboardingStatus() {
   const completeOnboarding = useCallback(async () => {
     await writeOnboardingComplete();
     setHasCompleted(true);
+    listeners.forEach((listener) => listener(true));
   }, []);
 
   const resetOnboarding = useCallback(async () => {
     await clearOnboardingComplete();
     setHasCompleted(false);
+    listeners.forEach((listener) => listener(false));
   }, []);
 
   return { isReady, hasCompleted, completeOnboarding, resetOnboarding };

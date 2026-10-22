@@ -2,7 +2,7 @@ import Feather from '@expo/vector-icons/Feather';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -39,7 +39,9 @@ import {
 } from '@/types/pet';
 
 const BRAND = '#7C3AED';
-const TAB_BAR_CLEARANCE = 120;
+// FloatingTabBar is hidden on PetDetail, so only the device's bottom inset needs clearing,
+// and that padding belongs inside each tab's ScrollView (never around it).
+const BOTTOM_CLEARANCE = 32;
 
 type CareTab = 'health' | 'training' | 'nutrition';
 type Nav = NativeStackNavigationProp<PetsStackParamList, 'PetDetail'>;
@@ -73,17 +75,40 @@ export default function PetDetailScreen() {
     setPet(next);
   }, [getPet, params.petId]);
 
+  // Keep the latest reload functions in a ref so the focus effect runs only when the screen
+  // gains focus - not whenever a hook hands back a new reload function (e.g. on date change).
+  const reloadersRef = useRef({
+    refreshPet,
+    care: care.reload,
+    loadDocuments,
+    training: training.reload,
+    nutrition: nutritionState.reload,
+  });
+  reloadersRef.current = {
+    refreshPet,
+    care: care.reload,
+    loadDocuments,
+    training: training.reload,
+    nutrition: nutritionState.reload,
+  };
+  const hasLoadedOnceRef = useRef(false);
+
   useFocusEffect(
     useCallback(() => {
-      setLoadingPet(true);
-      void Promise.all([
-        refreshPet(),
-        care.reload(),
-        loadDocuments(),
-        training.reload(),
-        nutritionState.reload(),
-      ]).finally(() => setLoadingPet(false));
-    }, [refreshPet, care.reload, loadDocuments, training.reload, nutritionState.reload]),
+      const reloaders = reloadersRef.current;
+      // Only block the screen on the first load; later focus refreshes happen in the background.
+      if (!hasLoadedOnceRef.current) setLoadingPet(true);
+      void Promise.allSettled([
+        reloaders.refreshPet(),
+        reloaders.care(),
+        reloaders.loadDocuments(),
+        reloaders.training(),
+        reloaders.nutrition(),
+      ]).finally(() => {
+        hasLoadedOnceRef.current = true;
+        setLoadingPet(false);
+      });
+    }, []),
   );
 
   if (loadingPet || !pet || !care.isReady || !docsReady) {
@@ -122,7 +147,7 @@ export default function PetDetailScreen() {
       </View>
 
       {tab === 'training' ? (
-        <View style={{ flex: 1, paddingBottom: TAB_BAR_CLEARANCE + insets.bottom }}>
+        <View style={{ flex: 1 }}>
           <TrainingTab
             pet={pet}
             training={training}
@@ -135,7 +160,7 @@ export default function PetDetailScreen() {
           />
         </View>
       ) : tab === 'nutrition' ? (
-        <View style={{ flex: 1, paddingBottom: TAB_BAR_CLEARANCE + insets.bottom }}>
+        <View style={{ flex: 1 }}>
           <NutritionTab
             pet={pet}
             nutrition={nutritionState}
@@ -149,7 +174,7 @@ export default function PetDetailScreen() {
         </View>
       ) : (
       <ScrollView
-        contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: BOTTOM_CLEARANCE + insets.bottom }}
         showsVerticalScrollIndicator={false}>
         {tab === 'health' ? (
           <HealthTab
@@ -458,7 +483,18 @@ function NutritionTab({
       foodDiary={nutrition.foodDiary}
       onSelectDate={nutrition.setSelectedDate}
       onOpenPreferences={onOpenPreferences}
-      onRegenerate={() => void nutrition.generatePlan().catch(() => undefined)}
+      onRegenerate={() => {
+        const regenerate = () => void nutrition.generatePlan().catch(() => undefined);
+        const message = `This replaces ${pet.name}'s current nutrition plan with a new AI-generated one.`;
+        if (Platform.OS === 'web') {
+          if (window.confirm(message)) regenerate();
+          return;
+        }
+        Alert.alert('Regenerate nutrition plan?', message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Regenerate', onPress: regenerate },
+        ]);
+      }}
       onToggleMeal={nutrition.toggleMealFed}
       onAddWater={() => void nutrition.addWater(1)}
       onAddTreat={() => void nutrition.addTreat('Training treat', 1)}
@@ -477,7 +513,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F9FAFB' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',

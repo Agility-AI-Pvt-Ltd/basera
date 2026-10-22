@@ -309,10 +309,12 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
       setMeals(((mealRows as MealRow[] | null) ?? []).map((row) => mapMeal(row, logByMeal.get(row.id))));
     }
 
-    const logEndDate = getNextDates(selectedDate, 7).at(-1)!;
+    // Load logs for every date in the strip so changing the selected day never triggers a reload.
+    const logStartDate = planDates[0];
+    const logEndDate = planDates[planDates.length - 1];
     const [{ data: waterRows, error: waterError }, { data: treatRows, error: treatError }] = await Promise.all([
-      supabase.from('pet_water_logs').select('*').eq('pet_id', petId).gte('log_date', selectedDate).lte('log_date', logEndDate).order('logged_at', { ascending: false }),
-      supabase.from('pet_treat_logs').select('*').eq('pet_id', petId).gte('log_date', selectedDate).lte('log_date', logEndDate).order('logged_at', { ascending: false }),
+      supabase.from('pet_water_logs').select('*').eq('pet_id', petId).gte('log_date', logStartDate).lte('log_date', logEndDate).order('logged_at', { ascending: false }),
+      supabase.from('pet_treat_logs').select('*').eq('pet_id', petId).gte('log_date', logStartDate).lte('log_date', logEndDate).order('logged_at', { ascending: false }),
     ]);
     if (waterError || treatError) throw waterError ?? treatError;
 
@@ -333,7 +335,7 @@ export function usePetNutrition(petId: string | undefined, pet: Pet | null) {
         }),
       ),
     );
-  }, [petId, selectedDate]);
+  }, [petId, planDates]);
 
   useEffect(() => {
     if (!petId) {
