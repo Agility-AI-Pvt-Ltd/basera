@@ -1,4 +1,4 @@
-import { AVATAR_PRESETS, BRAND_IMAGES, WEB_IMAGES } from '@basera/assets/web';
+import { AVATAR_PRESETS, BRAND_IMAGES, WEB_IMAGES } from '@tailz-club/assets/web';
 import {
   displayAuthorName,
   feedDayKey,
@@ -12,7 +12,7 @@ import {
   type GlobalPost,
   type GlobalPostType,
   type PresetAvatarId,
-} from '@basera/shared';
+} from '@tailz-club/shared';
 import {
   CalendarDays,
   ChevronDown,
@@ -165,7 +165,7 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
       <div className="community-auth">
         <div className="bc-brand" style={{ marginBottom: 16 }}>
           <img className="bc-brand-mark" src={BRAND_IMAGES.logo} alt="" />
-          <span>Basera</span>
+          <span>The Tailz Club</span>
         </div>
         <h1>Join the community</h1>
         <p className="community-muted">Sign in with OTP — session lasts up to 1 week.</p>
@@ -232,7 +232,7 @@ function AuthPanel({ onAuthed }: { onAuthed: () => void }) {
         )}
         {error ? <p className="community-error">{error}</p> : null}
         <p className="community-footnote">
-          Adoption, training, nutrition & more — open the Basera mobile app.
+          Adoption, training, nutrition & more — open The Tailz Club mobile app.
         </p>
       </div>
     </div>
@@ -303,11 +303,11 @@ function ProfileSetupPanel({
       <div className="community-auth community-profile-setup">
         <div className="bc-brand" style={{ marginBottom: 16 }}>
           <img className="bc-brand-mark" src={BRAND_IMAGES.logo} alt="" />
-          <span>Basera</span>
+          <span>The Tailz Club</span>
         </div>
         <h1>Set up your profile</h1>
         <p className="community-muted">
-          Choose a name and avatar for the community. You can finish the rest in the Basera app
+          Choose a name and avatar for the community. You can finish the rest in The Tailz Club app
           later.
         </p>
 
@@ -1292,7 +1292,7 @@ export function CommunityPage() {
       <header className="bc-topnav">
         <Link to="/community" className="bc-brand">
           <img className="bc-brand-mark" src={BRAND_IMAGES.logo} alt="" />
-          <span>Basera</span>
+          <span>The Tailz Club</span>
         </Link>
 
         <label className="bc-search">
@@ -1300,8 +1300,8 @@ export function CommunityPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search Basera"
-            aria-label="Search Basera"
+            placeholder="Search The Tailz Club"
+            aria-label="Search The Tailz Club"
           />
         </label>
 
@@ -1377,7 +1377,7 @@ export function CommunityPage() {
           </div>
 
           <div className="bc-member-card">
-            <strong>Basera Community</strong>
+            <strong>The Tailz Club Community</strong>
             <span>{formatMemberCount(members || 1)} pet parents · global feed</span>
           </div>
         </aside>

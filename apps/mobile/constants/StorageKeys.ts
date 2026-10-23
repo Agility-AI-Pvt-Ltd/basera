@@ -1,1 +1,1 @@
-export const ONBOARDING_COMPLETE_KEY = 'basera_onboarding_complete';
+export const ONBOARDING_COMPLETE_KEY = 'tailz_club_onboarding_complete';

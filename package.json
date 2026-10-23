@@ -1,11 +1,11 @@
 {
-  "name": "basera",
+  "name": "the-tailz-club",
   "version": "1.0.0",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
-    "dev:mobile": "pnpm --filter @basera/mobile dev",
-    "dev:web": "pnpm --filter @basera/web dev",
-    "dev:admin": "pnpm --filter @basera/admin dev",
+    "dev:mobile": "pnpm --filter @tailz-club/mobile dev",
+    "dev:web": "pnpm --filter @tailz-club/web dev",
+    "dev:admin": "pnpm --filter @tailz-club/admin dev",
     "dev:supabase": "supabase start",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
@@ -20,7 +20,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
-    "@basera/shared": "workspace:*",
+    "@tailz-club/shared": "workspace:*",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4"
   }

@@ -12,7 +12,7 @@ export function AdminLayout() {
         <div className="admin-brand">
           <span className="admin-brand-mark">B</span>
           <div>
-            <strong>Basera</strong>
+            <strong>The Tailz Club</strong>
             <span>Admin</span>
           </div>
         </div>

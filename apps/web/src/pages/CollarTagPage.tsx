@@ -418,14 +418,14 @@ export function CollarTagPage() {
       <header className="tag-nav">
         <div className="tag-nav__inner">
           <Link to="/" className="tag-nav__brand">
-            <span>Basera</span>
+            <span>The Tailz Club</span>
           </Link>
           <div className="tag-nav__links">
             <Link to="/community" className="tag-nav__link">
               Community Feed
             </Link>
             <Link to="/" className="tag-nav__btn">
-              About Basera
+              About The Tailz Club
             </Link>
           </div>
         </div>
@@ -506,7 +506,7 @@ export function CollarTagPage() {
             <section className="tag-landing-hero">
               <div className="tag-landing-badge">
                 <ShieldCheck size={15} />
-                <span>Basera Community Collar Initiative</span>
+                <span>The Tailz Club Community Collar Initiative</span>
               </div>
               <h1 className="tag-landing-title">
                 Every Collar Gives a Voice to a Community Animal
@@ -793,7 +793,7 @@ export function CollarTagPage() {
                 <div className="tag-faq-card">
                   <h4>How can our volunteer group or NGO get collar tags?</h4>
                   <p>
-                    Basera collaborates with local animal welfare organizations, RWAs, and independent caretakers
+                    The Tailz Club collaborates with local animal welfare organizations, RWAs, and independent caretakers
                     to provide subsidized collar batches for upcoming vaccination drives. Connect with us through the
                     community portal to organize a drive in your locality.
                   </p>
@@ -801,7 +801,7 @@ export function CollarTagPage() {
               </div>
             </section>
 
-            {/* Promoting Basera & Movement CTA */}
+            {/* Promoting The Tailz Club & Movement CTA */}
             <section className="tag-cta-section">
               <div className="tag-cta-card">
                 <div className="tag-cta-content">
@@ -811,7 +811,7 @@ export function CollarTagPage() {
                   </span>
                   <h2>Be the Guardian Your Street Animals Deserve</h2>
                   <p>
-                    Basera is built to uplift community animals across India. Connect with neighborhood feeders,
+                    The Tailz Club is built to uplift community animals across India. Connect with neighborhood feeders,
                     map your local street dogs, coordinate medical emergencies, and create safe, welcoming spaces
                     for all beings.
                   </p>
@@ -821,7 +821,7 @@ export function CollarTagPage() {
                       <ArrowRight size={16} />
                     </Link>
                     <Link to="/" className="tag-cta-btn-secondary">
-                      <span>Learn More About Basera</span>
+                      <span>Learn More About The Tailz Club</span>
                     </Link>
                   </div>
                 </div>
@@ -1116,7 +1116,7 @@ export function CollarTagPage() {
                         onClick={() => {
                           if (navigator.share) {
                             navigator.share({
-                              title: `${animal.name} - Basera Collar Tag`,
+                              title: `${animal.name} - The Tailz Club Collar Tag`,
                               url: window.location.href,
                             });
                           }
@@ -1408,20 +1408,20 @@ export function CollarTagPage() {
               </div>
             </div>
 
-            {/* Basera Mission & Cause Promotion Banner */}
+            {/* The Tailz Club Mission & Cause Promotion Banner */}
             <section className="tag-promo-banner">
               <div className="tag-promo-content">
-                <h2>Protecting Street Animals Together with Basera</h2>
+                <h2>Protecting Street Animals Together with The Tailz Club</h2>
                 <p>
                   This collar was fitted during a community vaccination drive to
                   protect street animals from preventable diseases like Rabies and
-                  ensure neighborhood harmony. Basera connects volunteers, feeders,
+                  ensure neighborhood harmony. The Tailz Club connects volunteers, feeders,
                   and local citizens to look after community pets.
                 </p>
                 <div className="tag-promo-actions">
                   <Link to="/community" className="tag-promo-btn tag-promo-btn--primary">
                     <Users size={16} />
-                    <span>Join Basera Community</span>
+                    <span>Join The Tailz Club Community</span>
                   </Link>
                   <Link to="/" className="tag-promo-btn tag-promo-btn--secondary">
                     <Sparkles size={16} />

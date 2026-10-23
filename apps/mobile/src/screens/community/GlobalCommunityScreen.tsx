@@ -11,8 +11,8 @@ import {
   type GlobalComment,
   type GlobalPost,
   type GlobalPostType,
-} from '@basera/shared';
-import { WEB_IMAGES } from '@basera/assets/native';
+} from '@tailz-club/shared';
+import { WEB_IMAGES } from '@tailz-club/assets/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -1076,9 +1076,9 @@ export default function GlobalCommunityScreen() {
       <View style={styles.hero}>
         <FontAwesome name="globe" size={22} color={BRAND} style={styles.heroGlobe} />
         <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>Basera Community</Text>
+          <Text style={styles.heroTitle}>The Tailz Club Community</Text>
           <Text style={styles.heroMeta}>{formatMemberCount(Math.max(memberCount, 1))} Pet Parents</Text>
-          <Text style={styles.heroSub}>Everyone on Basera · Global feed</Text>
+          <Text style={styles.heroSub}>Everyone on The Tailz Club · Global feed</Text>
         </View>
         <Image source={HOME_IMAGES.pets.goldenRetriever} style={styles.heroDog} contentFit="cover" />
       </View>

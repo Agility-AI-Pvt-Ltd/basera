@@ -1,6 +1,6 @@
-# Basera Admin (web)
+# The Tailz Club Admin (web)
 
-Web dashboard for managing Basera application data stored in Supabase.
+Web dashboard for managing The Tailz Club application data stored in Supabase.
 
 ## Setup
 
@@ -22,8 +22,8 @@ Web dashboard for managing Basera application data stored in Supabase.
 
    | Field | Value |
    | --- | --- |
-   | Email | `admin@basera.local` |
-   | Password | `BaseraAdmin2026!` |
+   | Email | `admin@tailzclub.local` |
+   | Password | `TailzClubAdmin2026!` |
 
    To create another admin via CLI (local Supabase running):
 

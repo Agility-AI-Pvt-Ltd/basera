@@ -138,7 +138,7 @@ export default function BasicsScreen() {
   return (
     <SignupShell
       title="Tell us about you"
-      subtitle="We need a few basics before you can use Basera. Photo is optional — you can add it later."
+      subtitle="We need a few basics before you can use The Tailz Club. Photo is optional — you can add it later."
       footer={
         <>
           <PrimaryButton label="Continue" onPress={handleContinue} disabled={!canContinue} />

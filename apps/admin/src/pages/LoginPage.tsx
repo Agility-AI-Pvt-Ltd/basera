@@ -26,7 +26,7 @@ export function LoginPage() {
   return (
     <div className="admin-login">
       <form className="admin-login-card" onSubmit={(e) => void onSubmit(e)}>
-        <h1>Basera Admin</h1>
+        <h1>The Tailz Club Admin</h1>
         <p className="admin-muted">Sign in with an admin account (email + password).</p>
         <label className="admin-field">
           <span>Email</span>

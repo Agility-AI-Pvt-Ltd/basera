@@ -1,2 +1,2 @@
-/** @deprecated Import from `@basera/assets/native` instead. */
-export { HOME_IMAGES } from '@basera/assets/native';
+/** @deprecated Import from `@tailz-club/assets/native` instead. */
+export { HOME_IMAGES } from '@tailz-club/assets/native';

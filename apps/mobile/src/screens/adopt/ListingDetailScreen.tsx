@@ -140,7 +140,7 @@ export default function ListingDetailScreen() {
           </Section>
 
           <Text style={styles.disclaimer}>
-            Adoption only — not a marketplace sale. Basera does not verify legal ownership; listers are
+            Adoption only — not a marketplace sale. The Tailz Club does not verify legal ownership; listers are
             responsible for accurate information.
           </Text>
         </View>

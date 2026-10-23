@@ -1,4 +1,4 @@
--- Basera Global Community (single feed, realtime)
+-- The Tailz Club Global Community (single feed, realtime)
 
 create table public.global_posts (
   id uuid primary key default gen_random_uuid(),

@@ -1,9 +1,9 @@
 /**
  * Vite / browser entry — ESM imports resolve to hashed URLs.
- * Import: `import { HOME_IMAGES, WEB_IMAGES } from '@basera/assets/web'`
+ * Import: `import { HOME_IMAGES, WEB_IMAGES } from '@tailz-club/assets/web'`
  */
 
-import baseraLogo from '../icon/basera_logo.png';
+import tailzClubLogo from '../icon/tailz_club_logo.png';
 import avatar from '../images/home/avatar-default.jpg';
 import birds from '../images/home/categories/birds.jpg';
 import cats from '../images/home/categories/cats.jpg';
@@ -32,7 +32,7 @@ import avatar05 from '../images/avatars/avatar-05.jpg';
 import avatar06 from '../images/avatars/avatar-06.jpg';
 
 export const BRAND_IMAGES = {
-  logo: baseraLogo,
+  logo: tailzClubLogo,
 } as const;
 
 export const HOME_IMAGES = {

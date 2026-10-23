@@ -1,5 +1,5 @@
 {
-  "name": "@basera/admin",
+  "name": "@tailz-club/admin",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@basera/assets": "workspace:*",
+    "@tailz-club/assets": "workspace:*",
     "@supabase/supabase-js": "^2.112.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

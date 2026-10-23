@@ -431,8 +431,8 @@ REQUESTED DATES: ${JSON.stringify(expectedDates)}`;
       'Content-Type': 'application/json',
     };
     if (isOpenRouter) {
-      aiHeaders['HTTP-Referer'] = Deno.env.get('OPENROUTER_HTTP_REFERER') ?? 'https://basera.app';
-      aiHeaders['X-Title'] = Deno.env.get('OPENROUTER_APP_NAME') ?? 'Basera';
+      aiHeaders['HTTP-Referer'] = Deno.env.get('OPENROUTER_HTTP_REFERER') ?? 'https://thetailzclub.app';
+      aiHeaders['X-Title'] = Deno.env.get('OPENROUTER_APP_NAME') ?? 'The Tailz Club';
     }
 
     const jsonMode = Deno.env.get('OPENAI_JSON_MODE') === 'true';

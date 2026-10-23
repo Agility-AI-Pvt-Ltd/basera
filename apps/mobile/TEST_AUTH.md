@@ -32,7 +32,7 @@ If **new** signups get **“Confirm your email address”** with a **link** to t
 
 1. [Supabase Dashboard](https://supabase.com/dashboard) → your project → **Authentication** → **Providers** → **Email**
 2. Turn **off** **Confirm email** (must match local `enable_confirmations = false` in `supabase/config.toml`).
-3. **Authentication** → **Email Templates** → **Confirm signup**: subject **“Your Basera sign-in code”**, body should show the code only (no confirmation link). You can mirror `supabase/templates/magic_link.html`.
+3. **Authentication** → **Email Templates** → **Confirm signup**: subject **“Your sign-in code for The Tailz Club”**, body should show the code only (no confirmation link). You can mirror `supabase/templates/magic_link.html`.
 4. **Authentication** → **URL Configuration**: **Site URL** is only used for link-based emails; with Confirm email off, users should get OTP-only mail.
 
 Existing users should already get the magic-link/OTP template; wrong mail on **first-time** email almost always means Confirm email is still enabled on hosted.
@@ -58,7 +58,7 @@ Open [http://127.0.0.1:54324](http://127.0.0.1:54324) on the same PC that runs `
 4. After restart, Auth should use `smtp-relay.brevo.com`. If mail still only shows in Mailpit, fix `.env` and restart again.
 5. Check spam/promotions. Trial Brevo accounts may only send to verified addresses.
 6. **Brevo “Unauthorized IP” (525):** In Brevo → **SMTP & API → SMTP**, allow your current public IP (or disable IP restriction for dev). Without this, Auth returns 500 and **no email** is sent — Mailpit will not receive anything either.
-7. **Mailpit shows a link, not a 6-digit code:** That means Auth was still on the default Mailpit template (no restart after adding `BREVO_SMTP_SENDER`, or SMTP send failed). After a good restart, subject should be **“Your Basera sign-in code”** and the body should show `{{ .Token }}` only (no sign-in link).
+7. **Mailpit shows a link, not a 6-digit code:** That means Auth was still on the default Mailpit template (no restart after adding `BREVO_SMTP_SENDER`, or SMTP send failed). After a good restart, subject should be **“Your sign-in code for The Tailz Club”** and the body should show `{{ .Token }}` only (no sign-in link).
 
 ## Flow
 

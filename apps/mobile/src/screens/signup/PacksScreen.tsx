@@ -73,7 +73,7 @@ export default function PacksScreen() {
       subtitle="Both paths land here — join a few local packs to get started. You can change this later."
       showBack
       onBack={handleBack}
-      footer={<PrimaryButton label="Enter Basera" onPress={finish} />}>
+      footer={<PrimaryButton label="Enter The Tailz Club" onPress={finish} />}>
       {SUGGESTED_PACKS.map((pack) => {
         const active = selected.includes(pack.id);
         return (

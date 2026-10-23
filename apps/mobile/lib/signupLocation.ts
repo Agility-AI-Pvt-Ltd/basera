@@ -78,7 +78,7 @@ async function reverseGeocodeNominatim(pin: LocalityPin): Promise<ParsedPlace | 
   const response = await fetch(`https://nominatim.openstreetmap.org/reverse?${params.toString()}`, {
     headers: {
       Accept: 'application/json',
-      'User-Agent': 'BaseraMobile/1.0 (signup location)',
+      'User-Agent': 'TailzClubMobile/1.0 (signup location)',
     },
   });
 

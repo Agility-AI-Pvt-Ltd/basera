@@ -35,7 +35,7 @@ export default function SettingsMenuScreen() {
 
   const confirmLogout = (): Promise<boolean> => {
     if (Platform.OS === 'web') {
-      return Promise.resolve(window.confirm('Log out of Basera?'));
+      return Promise.resolve(window.confirm('Log out of The Tailz Club?'));
     }
     return new Promise((resolve) => {
       Alert.alert('Log out', 'Are you sure you want to log out?', [

@@ -1,13 +1,13 @@
 /**
  * Metro / React Native entry — use `require()` so bundler embeds assets.
- * Import: `import { HOME_IMAGES } from '@basera/assets/native'`
+ * Import: `import { HOME_IMAGES } from '@tailz-club/assets/native'`
  */
 
 // ImageSourcePropType without depending on react-native in this package.
 type RnImageSource = number | { uri: string };
 
 export const BRAND_IMAGES = {
-  logo: require('../icon/basera_logo.png') as RnImageSource,
+  logo: require('../icon/tailz_club_logo.png') as RnImageSource,
 };
 
 export const HOME_IMAGES = {
@@ -46,4 +46,4 @@ export const AVATAR_PRESETS = {
   'avatar-06': require('../images/avatars/avatar-06.jpg') as RnImageSource,
 };
 
-/** Prefer `import X from '@basera/assets/images/onboarding/*.svg'` with svg-transformer. */
+/** Prefer `import X from '@tailz-club/assets/images/onboarding/*.svg'` with svg-transformer. */

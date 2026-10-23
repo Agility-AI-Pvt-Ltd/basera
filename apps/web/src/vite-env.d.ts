@@ -37,6 +37,10 @@ declare module '*.svg' {
 interface ImportMetaEnv {
   readonly VITE_PLAY_STORE_URL?: string;
   readonly VITE_CONTACT_EMAIL?: string;
+  readonly VITE_INSTAGRAM_HANDLE?: string;
+  readonly VITE_YOUTUBE_CHANNEL_URL?: string;
+  readonly VITE_INSTAGRAM_POST_URLS?: string;
+  readonly VITE_YOUTUBE_VIDEO_IDS?: string;
 }
 
 interface ImportMeta {

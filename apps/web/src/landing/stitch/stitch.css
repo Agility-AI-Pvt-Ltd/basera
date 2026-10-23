@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+@config '../../../tailwind.landing.config.js';
+
+@layer base {
+  html.scroll-smooth,
+  html:has(.stitch-landing) {
+    scroll-behavior: smooth;
+  }
+
+  .stitch-landing {
+    overscroll-behavior: none;
+  }
+
+  .stitch-landing ::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stitch-landing img.brand-logo-mark {
+    display: block;
+    object-fit: contain;
+  }
+
+  .stitch-landing img.brand-logo-mark--20 {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+  }
+
+  .stitch-landing img.brand-logo-mark--24 {
+    width: 24px !important;
+    height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+  }
+
+  .stitch-landing img.brand-logo-mark--28 {
+    width: 28px !important;
+    height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+  }
+
+  .stitch-landing .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+  }
+}

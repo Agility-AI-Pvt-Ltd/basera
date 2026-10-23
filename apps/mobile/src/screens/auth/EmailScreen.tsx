@@ -79,7 +79,7 @@ export default function EmailScreen() {
         <View style={styles.backRow}>
           <BackButton onPress={handleBackToCarousel} />
         </View>
-        <Text style={styles.brand}>Basera.</Text>
+        <Text style={styles.brand}>The Tailz Club.</Text>
 
         <Text style={styles.title}>Let&apos;s get started with your email</Text>
         <Text style={styles.subtitle}>

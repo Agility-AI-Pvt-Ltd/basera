@@ -1,4 +1,4 @@
-# Basera Global Community (MVP)
+# The Tailz Club Global Community (MVP)
 
 Single worldwide feed shared by **mobile app** and **web** (`/community`).
 

@@ -55,7 +55,7 @@ export function SignupShell({
               <BackButton onPress={onBack} />
             </View>
           ) : (
-            <Text style={styles.brand}>Basera.</Text>
+            <Text style={styles.brand}>The Tailz Club.</Text>
           )}
 
           <Text style={styles.title}>{title}</Text>

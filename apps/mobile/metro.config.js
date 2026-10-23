@@ -6,7 +6,7 @@ const workspaceRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
-// Monorepo: resolve & watch shared packages (e.g. @basera/assets)
+// Monorepo: resolve & watch shared packages (e.g. @tailz-club/assets)
 config.watchFolders = [workspaceRoot];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),

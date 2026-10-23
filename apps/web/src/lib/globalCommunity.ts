@@ -1,4 +1,4 @@
-import { AVATAR_PRESETS } from '@basera/assets/web';
+import { AVATAR_PRESETS } from '@tailz-club/assets/web';
 import {
   hasWebCommunityProfile,
   isPresetAvatarUri,
@@ -6,7 +6,7 @@ import {
   type GlobalComment,
   type GlobalPost,
   type GlobalPostType,
-} from '@basera/shared';
+} from '@tailz-club/shared';
 
 import { supabase } from './supabase';
 

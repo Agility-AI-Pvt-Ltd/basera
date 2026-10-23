@@ -1,5 +1,5 @@
-import { AVATAR_PRESETS } from '@basera/assets/native';
-import { parsePresetAvatarId } from '@basera/shared';
+import { AVATAR_PRESETS } from '@tailz-club/assets/native';
+import { parsePresetAvatarId } from '@tailz-club/shared';
 import { useEffect, useState } from 'react';
 import { ImageSourcePropType } from 'react-native';
 

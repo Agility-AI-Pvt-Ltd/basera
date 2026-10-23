@@ -1,15 +1,15 @@
 /**
- * Shared Basera assets.
+ * Shared The Tailz Club assets.
  *
  * Prefer platform entrypoints:
- * - React Native / Expo: `import { HOME_IMAGES } from '@basera/assets/native'`
- * - Vite web / admin:   `import { HOME_IMAGES, WEB_IMAGES } from '@basera/assets/web'`
- * - Direct file URL:    `import img from '@basera/assets/images/web/playstore.png'`
+ * - React Native / Expo: `import { HOME_IMAGES } from '@tailz-club/assets/native'`
+ * - Vite web / admin:   `import { HOME_IMAGES, WEB_IMAGES } from '@tailz-club/assets/web'`
+ * - Direct file URL:    `import img from '@tailz-club/assets/images/web/playstore.png'`
  */
 
 export const ASSET_PATHS = {
   icon: {
-    logo: 'icon/basera_logo.png',
+    logo: 'icon/tailz_club_logo.png',
   },
   home: {
     avatar: 'images/home/avatar-default.jpg',

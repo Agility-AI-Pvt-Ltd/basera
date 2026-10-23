@@ -1,4 +1,4 @@
-import { HOME_IMAGES } from '@basera/assets/native';
+import { HOME_IMAGES } from '@tailz-club/assets/native';
 import type { ImageSourcePropType } from 'react-native';
 
 export { HOME_IMAGES };

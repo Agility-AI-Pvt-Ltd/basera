@@ -13,7 +13,7 @@ function friendlyVerifyError(error: AuthError | null): string {
   if (code === 'otp_expired' || /expired|invalid/i.test(msg)) {
     return (
       'That code is invalid or expired. Tap Resend code, then enter the new 6-digit number within a few minutes. ' +
-      'Use the email whose subject is “Your Basera sign-in code” — not “Confirm your email address”. ' +
+      'Use the email whose subject is “Your sign-in code for The Tailz Club” — not “Confirm your email address”. ' +
       'Do not click any link in the email before entering the code (Gmail/Outlook preview can invalidate it).'
     );
   }

@@ -1,4 +1,4 @@
-# `@basera/assets`
+# `@tailz-club/assets`
 
 Shared images and media for **mobile**, **web**, and **admin**.
 
@@ -7,7 +7,7 @@ Shared images and media for **mobile**, **web**, and **admin**.
 ### React Native / Expo
 
 ```ts
-import { HOME_IMAGES, WEB_IMAGES } from '@basera/assets/native';
+import { HOME_IMAGES, WEB_IMAGES } from '@tailz-club/assets/native';
 
 <Image source={HOME_IMAGES.pets.goldenRetriever} />
 ```
@@ -15,15 +15,15 @@ import { HOME_IMAGES, WEB_IMAGES } from '@basera/assets/native';
 SVGs with `react-native-svg-transformer` can also be imported by path:
 
 ```ts
-import AdoptionImage from '@basera/assets/images/onboarding/adoption.svg';
+import AdoptionImage from '@tailz-club/assets/images/onboarding/adoption.svg';
 ```
 
 ### Vite (web / admin)
 
 ```ts
-import { HOME_IMAGES, WEB_IMAGES } from '@basera/assets/web';
+import { HOME_IMAGES, WEB_IMAGES } from '@tailz-club/assets/web';
 // or a single file:
-import playstore from '@basera/assets/images/web/playstore.png';
+import playstore from '@tailz-club/assets/images/web/playstore.png';
 
 <img src={WEB_IMAGES.playstore} alt="Google Play" />
 ```
@@ -31,13 +31,13 @@ import playstore from '@basera/assets/images/web/playstore.png';
 ### Path catalog (no bundler resolve)
 
 ```ts
-import { ASSET_PATHS } from '@basera/assets';
+import { ASSET_PATHS } from '@tailz-club/assets';
 ```
 
 ## Layout
 
 ```
-icon/            # brand marks (basera_logo.png)
+icon/            # brand marks (tailz_club_logo.png)
 images/
   home/          # avatar, categories, pets
   web/           # landing / marketing
@@ -51,9 +51,9 @@ src/
 Brand logo:
 
 ```ts
-import { BRAND_IMAGES } from '@basera/assets/web';
-// or: import logo from '@basera/assets/icon/basera_logo.png'
-<img src={BRAND_IMAGES.logo} alt="Basera" />
+import { BRAND_IMAGES } from '@tailz-club/assets/web';
+// or: import logo from '@tailz-club/assets/icon/tailz_club_logo.png'
+<img src={BRAND_IMAGES.logo} alt="The Tailz Club" />
 ```
 
 App-specific Expo icons/splash stay under `apps/mobile/assets`.

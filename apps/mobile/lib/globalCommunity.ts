@@ -3,7 +3,7 @@ import {
   type GlobalComment,
   type GlobalPost,
   type GlobalPostType,
-} from '@basera/shared';
+} from '@tailz-club/shared';
 
 import { PET_MEDIA_BUCKET } from '@/lib/petStorage';
 import { supabase } from '@/lib/supabase';
