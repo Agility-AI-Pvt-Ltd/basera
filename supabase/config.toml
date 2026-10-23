@@ -247,6 +247,12 @@ sender_name = "Basera"
 subject = "Your Basera sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
+# New-user signup uses this template when email confirmations are enabled.
+# Prefer enable_confirmations = false (OTP-only, no link). If confirmations stay on, keep this OTP-only body.
+[auth.email.template.confirmation]
+subject = "Your Basera sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
 [auth.email.template.recovery]
 subject = "Your Basera sign-in code"
 content_path = "./supabase/templates/recovery.html"

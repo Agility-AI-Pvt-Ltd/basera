@@ -25,6 +25,7 @@ export function useAuthStatus() {
   }, []);
 
   const sendOtp = useCallback(async (email: string) => {
+    // OTP-only: never set emailRedirectTo (adds magic/confirm links; link opens Site URL e.g. web community).
     const { error } = await supabase.auth.signInWithOtp({
       email: normalizeEmail(email),
       options: { shouldCreateUser: true },

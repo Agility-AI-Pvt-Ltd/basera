@@ -24,6 +24,21 @@ Login and signup use **email OTP** via Supabase Auth.
 
 4. **Web community**: same project URL/anon key in `apps/web/.env`.
 
+## Hosted Supabase (dashboard project)
+
+Mobile and web both call `signInWithOtp` with **no** `emailRedirectTo`. The email you receive is controlled by **project Auth settings**, not the app.
+
+If **new** signups get **“Confirm your email address”** with a **link** to the web community instead of a **6-digit code**:
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) → your project → **Authentication** → **Providers** → **Email**
+2. Turn **off** **Confirm email** (must match local `enable_confirmations = false` in `supabase/config.toml`).
+3. **Authentication** → **Email Templates** → **Confirm signup**: subject **“Your Basera sign-in code”**, body should show the code only (no confirmation link). You can mirror `supabase/templates/magic_link.html`.
+4. **Authentication** → **URL Configuration**: **Site URL** is only used for link-based emails; with Confirm email off, users should get OTP-only mail.
+
+Existing users should already get the magic-link/OTP template; wrong mail on **first-time** email almost always means Confirm email is still enabled on hosted.
+
+After changing dashboard settings, try a **new** email address or delete the test user in **Authentication** → **Users**, then send OTP again from mobile.
+
 ## Testing without Brevo
 
 If custom SMTP is not active (missing `BREVO_SMTP_SENDER` or Supabase was not restarted), Auth uses **Mailpit** only on your dev machine — **nothing is sent to Gmail/Outlook**.

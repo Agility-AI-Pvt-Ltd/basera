@@ -1,8 +1,8 @@
 /**
- * Syncs EXPO_PUBLIC_SUPABASE_URL, then starts Expo.
- * Probes candidates so we never bake in a dead hotspot/VPN IP.
- * - --web → 127.0.0.1
- * - otherwise → reachable LAN IP, else 127.0.0.1
+ * Starts Expo with the right EXPO_PUBLIC_SUPABASE_URL.
+ *
+ * - Hosted (https://*.supabase.co): uses .env as-is; does not rewrite the file.
+ * - Local (http://…:54321): probes LAN/localhost and syncs .env for Expo Go on a phone.
  */
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -61,6 +61,31 @@ function listLanIps() {
   return candidates.map((c) => c.ip);
 }
 
+function readEnvSupabaseUrl() {
+  if (!fs.existsSync(envPath)) return null;
+  const content = fs.readFileSync(envPath, 'utf8');
+  let last = null;
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const match = trimmed.match(/^EXPO_PUBLIC_SUPABASE_URL=(.*)$/);
+    if (match) {
+      last = match[1].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+  return last;
+}
+
+function isHostedSupabaseUrl(url) {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && /\.supabase\.(co|in)$/.test(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function probeSupabase(ip, timeoutMs = 1200) {
   return new Promise((resolve) => {
     const req = http.get(
@@ -97,22 +122,43 @@ async function pickReachableIp(preferLocalhost) {
   return '127.0.0.1';
 }
 
-function syncEnv(ip) {
+function pickPackagerHostname(isWeb) {
+  if (isWeb) return undefined;
+  const ips = listLanIps();
+  return ips.length > 0 ? ips[0] : undefined;
+}
+
+function syncLocalEnv(ip) {
   const url = `http://${ip}:${PORT}`;
   let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+  const lines = content.split('\n');
+  const out = [];
+  let inserted = false;
 
-  if (/^EXPO_PUBLIC_SUPABASE_URL=.*/m.test(content)) {
-    content = content.replace(/^EXPO_PUBLIC_SUPABASE_URL=.*/m, `EXPO_PUBLIC_SUPABASE_URL=${url}`);
-  } else {
-    content = `EXPO_PUBLIC_SUPABASE_URL=${url}\n${content}`;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('EXPO_PUBLIC_SUPABASE_URL=') && !trimmed.startsWith('#')) {
+      if (!inserted) {
+        out.push(`EXPO_PUBLIC_SUPABASE_URL=${url}`);
+        inserted = true;
+      }
+      continue;
+    }
+    out.push(line);
   }
 
-  fs.writeFileSync(envPath, content);
-  console.log(`[sync-supabase-url] EXPO_PUBLIC_SUPABASE_URL=${url}`);
+  if (!inserted) {
+    out.unshift(`EXPO_PUBLIC_SUPABASE_URL=${url}`);
+  }
+
+  fs.writeFileSync(envPath, out.join('\n'));
+  console.log(`[sync-supabase-url] Local Supabase → EXPO_PUBLIC_SUPABASE_URL=${url}`);
   if (ip !== '127.0.0.1') {
-    console.log(`[sync-supabase-url] Phone and PC must share Wi-Fi ${ip}`);
+    console.log(`[sync-supabase-url] Phone and PC must share Wi-Fi (${ip})`);
   } else {
-    console.log(`[sync-supabase-url] Using localhost (web / same-machine). For a physical phone, ensure LAN IP is reachable.`);
+    console.log(
+      `[sync-supabase-url] Using localhost (web / same-machine). For a physical phone, ensure LAN IP is reachable.`,
+    );
   }
   return url;
 }
@@ -120,8 +166,23 @@ function syncEnv(ip) {
 async function main() {
   const expoArgs = process.argv.slice(2);
   const isWeb = expoArgs.includes('--web');
-  const ip = await pickReachableIp(isWeb);
-  const url = syncEnv(ip);
+  const configured = readEnvSupabaseUrl();
+
+  let supabaseUrl;
+  let packagerHostname;
+
+  if (isHostedSupabaseUrl(configured)) {
+    supabaseUrl = configured;
+    packagerHostname = pickPackagerHostname(isWeb);
+    console.log(`[sync-supabase-url] Hosted Supabase (unchanged): ${supabaseUrl}`);
+    if (packagerHostname) {
+      console.log(`[sync-supabase-url] Expo packager LAN: ${packagerHostname}`);
+    }
+  } else {
+    const ip = await pickReachableIp(isWeb);
+    supabaseUrl = syncLocalEnv(ip);
+    packagerHostname = isWeb ? undefined : ip === '127.0.0.1' ? undefined : ip;
+  }
 
   const child = spawn('npx', ['expo', 'start', '--lan', ...expoArgs], {
     cwd: root,
@@ -129,8 +190,8 @@ async function main() {
     shell: true,
     env: {
       ...process.env,
-      REACT_NATIVE_PACKAGER_HOSTNAME: isWeb ? undefined : ip === '127.0.0.1' ? undefined : ip,
-      EXPO_PUBLIC_SUPABASE_URL: url,
+      REACT_NATIVE_PACKAGER_HOSTNAME: packagerHostname,
+      EXPO_PUBLIC_SUPABASE_URL: supabaseUrl,
       EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1',
     },
   });
