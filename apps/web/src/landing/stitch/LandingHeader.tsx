@@ -8,7 +8,6 @@ const NAV = [
   { href: '#adopt', label: 'Adopt' },
   { href: '#care', label: 'Care' },
   { href: '#community', label: 'Community' },
-  { href: '#activity', label: 'Activity' },
   { href: '#collartags', label: 'Collar Tags' },
 ] as const;
 

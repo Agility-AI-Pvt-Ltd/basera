@@ -79,7 +79,7 @@ export function LandingFooter() {
                   key={icon}
                   aria-label={icon}
                   className="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors"
-                  href="#activity"
+                  href="/activity"
                 >
                   <MaterialSymbol name={icon} size={18} />
                 </a>
@@ -92,7 +92,6 @@ export function LandingFooter() {
               {[
                 ['#adopt', 'Adopt a Pet'],
                 ['#care', 'Care & Wellness Reminders'],
-                ['#activity', 'Daily Activity Tracker'],
                 ['#community', 'Neighborhood Walking Clubs'],
                 ['#collartags', 'Smart QR & NFC Collar Tags'],
               ].map(([href, label]) => (

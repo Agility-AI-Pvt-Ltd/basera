@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { LandingFooter } from './LandingFooter';
 import { LandingHeader } from './LandingHeader';
 import { AdoptSection } from './sections/AdoptSection';
-import { ActivitySection } from './sections/ActivitySection';
 import { CareSection } from './sections/CareSection';
 import { CollarSection } from './sections/CollarSection';
 import { CommunitySection } from './sections/CommunitySection';
@@ -31,7 +30,6 @@ export function StitchLandingPage() {
           <CommunitySection />
           <CollarSection />
           <TestimonialsSection />
-          <ActivitySection />
           <GetAppSection />
         </div>
       </main>

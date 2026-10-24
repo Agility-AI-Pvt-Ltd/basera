@@ -4,6 +4,19 @@
   "installCommand": "cd ../.. && pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "basera-d3qc.vercel.app"
+        }
+      ],
+      "destination": "https://thetailzclub.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!landing-page|images|assets|favicon\\.png).*)",
