@@ -50,13 +50,13 @@ export function CollarSection() {
             <div className="flex flex-wrap items-center gap-space-md pt-space-sm">
               <Link
                 to="/tag"
-                className="px-space-xl py-space-sm rounded-full bg-primary-fixed text-on-primary-fixed hover:bg-surface-container-lowest font-label-lg text-label-lg font-bold shadow-md transition-all inline-block text-center"
+                className="px-space-xl py-space-sm rounded-full bg-primary text-on-primary hover:bg-[#5200b3] font-label-lg text-label-lg font-bold shadow-[0_4px_18px_rgba(99,14,212,0.38)] transition-all inline-block text-center"
               >
                 Verify a tag
               </Link>
               <button
                 type="button"
-                className="px-space-xl py-space-sm rounded-full bg-surface-container-highest/20 hover:bg-surface-container-highest/30 text-inverse-on-surface font-label-lg text-label-lg transition-all"
+                className="px-space-xl py-space-sm rounded-full bg-secondary text-on-secondary hover:bg-[#6b3f0f] font-label-lg text-label-lg transition-all shadow-md"
               >
                 Order tags for your street pack / colony
               </button>

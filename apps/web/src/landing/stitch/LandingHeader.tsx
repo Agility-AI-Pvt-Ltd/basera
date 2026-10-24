@@ -17,7 +17,7 @@ export function LandingHeader() {
       <div className="h-16 lg:h-20 max-w-[1280px] mx-auto px-margin md:px-margin-md lg:px-margin-lg flex items-center justify-between gap-3 min-w-0">
         <Link to="/" className="flex items-center gap-2 min-w-0 shrink-0">
           <BrandLogo size={20} />
-          <span className="font-title-md text-title-md text-on-surface tracking-tight hidden sm:inline truncate leading-none">
+          <span className="font-title-md text-title-md text-on-background font-bold tracking-tight truncate leading-tight">
             The Tailz Club
           </span>
         </Link>
@@ -37,7 +37,7 @@ export function LandingHeader() {
         </nav>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <a
-            className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-3 sm:px-4 py-2 rounded-full shadow-[0_4px_16px_rgba(99,14,212,0.2)] hover:shadow-[0_6px_20px_rgba(99,14,212,0.3)] transition-all duration-200 active:scale-95 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 bg-primary hover:bg-[#5200b3] text-on-primary font-label-md text-label-md px-3 sm:px-4 py-2 rounded-full shadow-[0_4px_18px_rgba(99,14,212,0.38)] hover:shadow-[0_6px_24px_rgba(99,14,212,0.48)] transition-all duration-200 active:scale-[0.98] whitespace-nowrap"
             href={PLAY_STORE_URL || '#get-app'}
             target={PLAY_STORE_URL ? '_blank' : undefined}
             rel={PLAY_STORE_URL ? 'noopener noreferrer' : undefined}

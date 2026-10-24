@@ -33,7 +33,7 @@
   text-decoration: none;
   font-weight: 800;
   font-size: 1.25rem;
-  color: var(--purple-700);
+  color: var(--ink);
 }
 
 .tag-nav__links {

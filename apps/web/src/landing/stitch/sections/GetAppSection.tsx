@@ -42,7 +42,7 @@ export function GetAppSection() {
                 onChange={(e) => setEmail(e.target.value)}
               />
               <button
-                className="px-space-xl py-space-sm rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg shadow-md transition-all shrink-0"
+                className="px-space-xl py-space-sm rounded-full bg-primary hover:bg-[#5200b3] text-on-primary font-label-lg text-label-lg shadow-[0_4px_18px_rgba(99,14,212,0.38)] transition-all shrink-0"
                 type="submit"
               >
                 Notify Me

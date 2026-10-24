@@ -6,14 +6,27 @@
   "outputDirectory": "dist",
   "redirects": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "basera-d3qc.vercel.app" }],
+      "destination": "https://www.thetailzclub.com/",
+      "permanent": true
+    },
+    {
+      "source": "/tag",
+      "has": [{ "type": "host", "value": "basera-d3qc.vercel.app" }],
+      "destination": "https://www.thetailzclub.com/",
+      "permanent": true
+    },
+    {
+      "source": "/t/:tagCode",
+      "has": [{ "type": "host", "value": "basera-d3qc.vercel.app" }],
+      "destination": "https://www.thetailzclub.com/t/:tagCode",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "basera-d3qc.vercel.app"
-        }
-      ],
-      "destination": "https://thetailzclub.com/:path*",
+      "has": [{ "type": "host", "value": "basera-d3qc.vercel.app" }],
+      "destination": "https://www.thetailzclub.com/:path*",
       "permanent": true
     }
   ],

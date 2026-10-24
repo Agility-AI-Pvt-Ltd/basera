@@ -139,7 +139,7 @@ export function NearbyPetsSection() {
                   </div>
                   <button
                     type="button"
-                    className="px-space-md py-1.5 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-colors shadow-sm"
+                    className="px-space-md py-1.5 rounded-full bg-primary hover:bg-[#5200b3] text-on-primary font-label-md text-label-md transition-colors shadow-[0_2px_10px_rgba(99,14,212,0.35)]"
                   >
                     Apply
                   </button>

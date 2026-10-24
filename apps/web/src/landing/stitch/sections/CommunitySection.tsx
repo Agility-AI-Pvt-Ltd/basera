@@ -69,7 +69,7 @@ export function CommunitySection() {
             </div>
             <div className="pt-space-xs">
               <Link
-                className="inline-flex items-center gap-space-xs bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg px-space-xl py-space-sm rounded-full shadow-md transition-all"
+                className="inline-flex items-center gap-space-xs bg-primary hover:bg-[#5200b3] text-on-primary font-label-lg text-label-lg px-space-xl py-space-sm rounded-full shadow-[0_4px_18px_rgba(99,14,212,0.38)] transition-all"
                 to="/community"
               >
                 <MaterialSymbol name="explore" size={20} />

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PLAY_STORE_URL } from '../../../config';
 import { LANDING_IMG } from '../landingAssets';
 import { MaterialSymbol } from '../MaterialSymbol';
-import { SPECIES_PILL_ACTIVE, SPECIES_PILL_INACTIVE } from '../pillClasses';
+import { LANDING_BTN_PRIMARY, SPECIES_PILL_ACTIVE, SPECIES_PILL_INACTIVE } from '../pillClasses';
 
 const SPECIES = ['All', 'Dogs 🐕', 'Cats 🐈', 'Birds 🦜', 'Rabbits 🐇', 'Fish 🐟'] as const;
 
@@ -50,7 +50,7 @@ export function HeroSection({ activeSpecies, onSpeciesChange }: HeroSectionProps
             </div>
             <div className="flex flex-wrap items-center gap-space-md pt-space-sm">
               <a
-                className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-4 py-2 rounded-full shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+                className={`${LANDING_BTN_PRIMARY} px-4 py-2 hover:-translate-y-0.5`}
                 href={PLAY_STORE_URL || '#get-app'}
                 target={PLAY_STORE_URL ? '_blank' : undefined}
                 rel={PLAY_STORE_URL ? 'noopener noreferrer' : undefined}
@@ -59,7 +59,7 @@ export function HeroSection({ activeSpecies, onSpeciesChange }: HeroSectionProps
                 <span>Get the app</span>
               </a>
               <Link
-                className="inline-flex items-center gap-1.5 bg-surface-container-lowest text-primary hover:bg-surface-container-high font-label-md text-label-md px-4 py-2 rounded-full shadow-sm transition-all hover:-translate-y-0.5 whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 bg-surface-container-lowest text-primary border border-primary/25 hover:bg-primary hover:text-on-primary hover:border-primary font-label-md text-label-md px-4 py-2 rounded-full shadow-md transition-all hover:-translate-y-0.5 whitespace-nowrap"
                 to="/tag"
               >
                 <MaterialSymbol name="shield" size={20} className="text-primary" fill />
@@ -132,7 +132,7 @@ export function HeroSection({ activeSpecies, onSpeciesChange }: HeroSectionProps
                   </span>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary-container transition-colors"
+                    className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm hover:bg-[#5200b3] transition-colors shadow-sm"
                   >
                     <MaterialSymbol name="check" size={14} />
                     <span>Mark Done</span>
