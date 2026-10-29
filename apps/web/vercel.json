@@ -32,7 +32,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!landing-page|images|assets|favicon\\.png).*)",
+      "source": "/((?!landing-page|images|assets|community|sidebar|favicon\\.png|apple-touch-icon\\.png).*)",
       "destination": "/index.html"
     }
   ]
