@@ -4,7 +4,13 @@ import {
   isPresetAvatarUri,
   parsePresetAvatarId,
   type GlobalComment,
+  type GlobalEventRsvpStatus,
+  type GlobalEventVisibility,
   type GlobalPost,
+  type GlobalPostEvent,
+  type GlobalPostEventAttendee,
+  type GlobalPostPoll,
+  type GlobalPostPollOption,
   type GlobalPostType,
 } from '@tailz-club/shared';
 
@@ -108,6 +114,7 @@ export function mapGlobalPost(
   photoUrls: Map<string, string> = new Map(),
 ): GlobalPost {
   const storageKey = (row.media_storage_key as string | null) ?? null;
+  const originalStorageKey = (row.original_media_storage_key as string | null) ?? null;
   const authorId = row.author_id as string;
   return {
     id: row.id as string,
@@ -117,6 +124,23 @@ export function mapGlobalPost(
     petName: (row.pet_name as string | null) ?? null,
     mediaStorageKey: storageKey,
     mediaUrl: mediaPublicUrl(storageKey),
+    originalMediaStorageKey: originalStorageKey,
+    originalMediaUrl: mediaPublicUrl(originalStorageKey),
+    pollTitle: (row.poll_title as string | null) ?? null,
+    pollEndsAt: (row.poll_ends_at as string | null) ?? null,
+    eventTitle: (row.event_title as string | null) ?? null,
+    eventStartsAt: (row.event_starts_at as string | null) ?? null,
+    eventLocation: (row.event_location as string | null) ?? null,
+    eventVisibility: (row.event_visibility as GlobalEventVisibility | null) ?? null,
+    locationName: (row.location_name as string | null) ?? null,
+    locationLat:
+      row.location_lat === null || row.location_lat === undefined
+        ? null
+        : Number(row.location_lat),
+    locationLng:
+      row.location_lng === null || row.location_lng === undefined
+        ? null
+        : Number(row.location_lng),
     likeCount: Number(row.like_count ?? 0),
     commentCount: Number(row.comment_count ?? 0),
     createdAt: row.created_at as string,
@@ -161,9 +185,174 @@ export async function fetchGlobalPosts(userId: string | null): Promise<GlobalPos
     liked = new Set((likeRows ?? []).map((r) => r.post_id as string));
   }
 
-  return rows.map((row) =>
+  const posts = rows.map((row) =>
     mapGlobalPost(row, profiles.get(row.author_id as string), liked.has(row.id as string), photoUrls),
   );
+  const withPolls = await enrichPostsWithPolls(posts, userId);
+  return enrichPostsWithEvents(withPolls, userId);
+}
+
+async function enrichPostsWithPolls(
+  posts: GlobalPost[],
+  userId: string | null,
+): Promise<GlobalPost[]> {
+  const pollPosts = posts.filter((p) => p.postType === 'poll');
+  if (pollPosts.length === 0) return posts;
+
+  const pollIds = pollPosts.map((p) => p.id);
+  const { data: optionRows, error: optionErr } = await supabase
+    .from('global_post_poll_options')
+    .select('id, post_id, label, position')
+    .in('post_id', pollIds)
+    .order('position', { ascending: true });
+
+  if (optionErr) {
+    console.error('enrichPostsWithPolls options', optionErr);
+    return posts;
+  }
+
+  const { data: voteRows, error: voteErr } = await supabase
+    .from('global_post_poll_votes')
+    .select('post_id, option_id, user_id')
+    .in('post_id', pollIds);
+
+  if (voteErr) {
+    console.error('enrichPostsWithPolls votes', voteErr);
+    return posts;
+  }
+
+  const optionsByPost = new Map<string, Array<{ id: string; label: string; position: number }>>();
+  for (const row of optionRows ?? []) {
+    const postId = row.post_id as string;
+    const list = optionsByPost.get(postId) ?? [];
+    list.push({
+      id: row.id as string,
+      label: row.label as string,
+      position: Number(row.position ?? 0),
+    });
+    optionsByPost.set(postId, list);
+  }
+
+  const voteCountByOption = new Map<string, number>();
+  const myVoteByPost = new Map<string, string>();
+  for (const row of voteRows ?? []) {
+    const optionId = row.option_id as string;
+    voteCountByOption.set(optionId, (voteCountByOption.get(optionId) ?? 0) + 1);
+    if (userId && row.user_id === userId) {
+      myVoteByPost.set(row.post_id as string, optionId);
+    }
+  }
+
+  const pollByPostId = new Map<string, GlobalPostPoll>();
+  for (const post of pollPosts) {
+    const title = post.pollTitle?.trim() || 'Poll';
+    const endsAt = post.pollEndsAt ?? post.createdAt;
+    const endsMs = new Date(endsAt).getTime();
+    const isEnded = endsMs <= Date.now();
+
+    const rawOptions = (optionsByPost.get(post.id) ?? []).sort((a, b) => a.position - b.position);
+    let totalVotes = 0;
+    const tallies = rawOptions.map((opt) => {
+      const voteCount = voteCountByOption.get(opt.id) ?? 0;
+      totalVotes += voteCount;
+      return { ...opt, voteCount };
+    });
+
+    const options: GlobalPostPollOption[] = tallies.map((opt) => ({
+      id: opt.id,
+      label: opt.label,
+      voteCount: opt.voteCount,
+      percent: totalVotes > 0 ? Math.round((opt.voteCount / totalVotes) * 100) : 0,
+    }));
+
+    pollByPostId.set(post.id, {
+      title,
+      endsAt,
+      totalVotes,
+      options,
+      myOptionId: myVoteByPost.get(post.id) ?? null,
+      isEnded,
+    });
+  }
+
+  return posts.map((post) => {
+    const poll = pollByPostId.get(post.id);
+    return poll ? { ...post, poll } : post;
+  });
+}
+
+async function enrichPostsWithEvents(
+  posts: GlobalPost[],
+  userId: string | null,
+): Promise<GlobalPost[]> {
+  const eventPosts = posts.filter((p) => p.postType === 'event');
+  if (eventPosts.length === 0) return posts;
+
+  const eventIds = eventPosts.map((p) => p.id);
+  const { data: rsvpRows, error: rsvpErr } = await supabase
+    .from('global_post_event_rsvps')
+    .select('post_id, user_id, status')
+    .in('post_id', eventIds);
+
+  if (rsvpErr) {
+    console.error('enrichPostsWithEvents', rsvpErr);
+    return posts;
+  }
+
+  const attendeeIds = [...new Set((rsvpRows ?? []).map((r) => r.user_id as string))];
+  const profiles = await loadProfiles(attendeeIds);
+  const photoUrls = await resolveProfilePhotoUrls(
+    [...profiles.values()].map((p) => p.photo_uri),
+  );
+
+  const rsvpsByPost = new Map<
+    string,
+    Array<{ userId: string; status: GlobalEventRsvpStatus }>
+  >();
+  for (const row of rsvpRows ?? []) {
+    const postId = row.post_id as string;
+    const list = rsvpsByPost.get(postId) ?? [];
+    list.push({
+      userId: row.user_id as string,
+      status: row.status as GlobalEventRsvpStatus,
+    });
+    rsvpsByPost.set(postId, list);
+  }
+
+  const eventByPostId = new Map<string, GlobalPostEvent>();
+  const now = Date.now();
+  for (const post of eventPosts) {
+    const startsAt = post.eventStartsAt ?? post.createdAt;
+    const rsvps = rsvpsByPost.get(post.id) ?? [];
+    const interestedCount = rsvps.filter((r) => r.status === 'interested').length;
+    const goingCount = rsvps.filter((r) => r.status === 'going').length;
+    const myStatus = userId
+      ? (rsvps.find((r) => r.userId === userId)?.status ?? null)
+      : null;
+
+    const attendees: GlobalPostEventAttendee[] = rsvps.slice(0, 5).map((r) => {
+      const profile = profiles.get(r.userId);
+      const mapped = mapAuthor(profile, r.userId, photoUrls);
+      return { id: mapped.id, name: mapped.name, photoUri: mapped.photoUri };
+    });
+
+    eventByPostId.set(post.id, {
+      title: post.eventTitle?.trim() || 'Event',
+      startsAt,
+      location: post.eventLocation?.trim() || 'Location TBA',
+      visibility: post.eventVisibility === 'invite_only' ? 'invite_only' : 'open',
+      interestedCount,
+      goingCount,
+      myStatus,
+      attendees,
+      isLive: new Date(startsAt).getTime() >= now - 3 * 3600000,
+    });
+  }
+
+  return posts.map((post) => {
+    const event = eventByPostId.get(post.id);
+    return event ? { ...post, event } : post;
+  });
 }
 
 function friendlyPostError(error: { message?: string; code?: string; details?: string }): string {
@@ -182,6 +371,10 @@ export async function createGlobalPost(input: {
   postType?: GlobalPostType;
   petName?: string;
   mediaStorageKey?: string;
+  originalMediaStorageKey?: string | null;
+  locationName?: string | null;
+  locationLat?: number | null;
+  locationLng?: number | null;
 }): Promise<string | null> {
   const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
   if (refreshErr || !refreshed.session?.access_token) {
@@ -193,17 +386,225 @@ export async function createGlobalPost(input: {
     return 'Session mismatch. Sign out and sign in again.';
   }
 
+  const hasCoords =
+    typeof input.locationLat === 'number' &&
+    typeof input.locationLng === 'number' &&
+    Number.isFinite(input.locationLat) &&
+    Number.isFinite(input.locationLng);
+
   const { error } = await supabase.from('global_posts').insert({
     author_id: authorId,
     body: input.body.trim(),
     post_type: input.postType ?? 'text',
     pet_name: input.petName?.trim() || null,
     media_storage_key: input.mediaStorageKey ?? null,
+    original_media_storage_key: input.originalMediaStorageKey ?? null,
+    location_name: hasCoords ? input.locationName?.trim() || null : null,
+    location_lat: hasCoords ? input.locationLat : null,
+    location_lng: hasCoords ? input.locationLng : null,
   });
   if (error) {
     console.error('createGlobalPost', error);
     return friendlyPostError(error);
   }
+  return null;
+}
+
+export async function createGlobalEventPost(input: {
+  authorId: string;
+  title: string;
+  body: string;
+  startsAt: string;
+  location: string;
+  visibility?: GlobalEventVisibility;
+}): Promise<string | null> {
+  const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+  if (refreshErr || !refreshed.session?.access_token) {
+    return 'Session expired. Sign in again with OTP.';
+  }
+
+  const authorId = refreshed.session.user.id;
+  if (authorId !== input.authorId) {
+    return 'Session mismatch. Sign out and sign in again.';
+  }
+
+  const title = input.title.trim();
+  const location = input.location.trim();
+  const body = input.body.trim();
+  if (title.length < 2) return 'Enter an event title.';
+  if (!input.startsAt) return 'Pick a date and time.';
+  if (Number.isNaN(new Date(input.startsAt).getTime())) return 'Invalid event date.';
+  if (location.length < 2) return 'Add a location.';
+  if (body.length < 2) return 'Add a short description.';
+
+  const { error } = await supabase.from('global_posts').insert({
+    author_id: authorId,
+    body,
+    post_type: 'event',
+    event_title: title,
+    event_starts_at: new Date(input.startsAt).toISOString(),
+    event_location: location,
+    event_visibility: input.visibility ?? 'open',
+  });
+
+  if (error) {
+    console.error('createGlobalEventPost', error);
+    return friendlyPostError(error);
+  }
+  return null;
+}
+
+export async function setGlobalEventRsvp(input: {
+  postId: string;
+  userId: string;
+  status: GlobalEventRsvpStatus | null;
+}): Promise<string | null> {
+  const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+  if (refreshErr || !refreshed.session?.access_token) {
+    return 'Session expired. Sign in again with OTP.';
+  }
+  if (refreshed.session.user.id !== input.userId) {
+    return 'Session mismatch. Sign out and sign in again.';
+  }
+
+  const { data: post, error: postErr } = await supabase
+    .from('global_posts')
+    .select('id, post_type')
+    .eq('id', input.postId)
+    .maybeSingle();
+
+  if (postErr || !post) return 'Event not found.';
+  if (post.post_type !== 'event') return 'This post is not an event.';
+
+  if (input.status === null) {
+    const { error } = await supabase
+      .from('global_post_event_rsvps')
+      .delete()
+      .eq('post_id', input.postId)
+      .eq('user_id', input.userId);
+    return error ? friendlyPostError(error) : null;
+  }
+
+  const { error } = await supabase.from('global_post_event_rsvps').upsert(
+    {
+      post_id: input.postId,
+      user_id: input.userId,
+      status: input.status,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'post_id,user_id' },
+  );
+  return error ? friendlyPostError(error) : null;
+}
+
+export async function createGlobalPollPost(input: {
+  authorId: string;
+  body: string;
+  pollTitle: string;
+  options: string[];
+  durationDays?: number;
+}): Promise<string | null> {
+  const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+  if (refreshErr || !refreshed.session?.access_token) {
+    return 'Session expired. Sign in again with OTP.';
+  }
+
+  const authorId = refreshed.session.user.id;
+  if (authorId !== input.authorId) {
+    return 'Session mismatch. Sign out and sign in again.';
+  }
+
+  const labels = input.options.map((o) => o.trim()).filter((o) => o.length >= 1);
+  if (labels.length < 2) {
+    return 'Add at least two poll options.';
+  }
+  if (labels.length > 5) {
+    return 'Polls can have at most five options.';
+  }
+
+  const durationDays = input.durationDays ?? 7;
+  const endsAt = new Date(Date.now() + durationDays * 86400000).toISOString();
+  const pollTitle = input.pollTitle.trim() || 'Poll';
+
+  const { data: inserted, error: postErr } = await supabase
+    .from('global_posts')
+    .insert({
+      author_id: authorId,
+      body: input.body.trim(),
+      post_type: 'poll',
+      poll_title: pollTitle,
+      poll_ends_at: endsAt,
+    })
+    .select('id')
+    .single();
+
+  if (postErr || !inserted?.id) {
+    console.error('createGlobalPollPost', postErr);
+    return friendlyPostError(postErr ?? { message: 'Could not create poll.' });
+  }
+
+  const postId = inserted.id as string;
+  const optionRows = labels.map((label, index) => ({
+    post_id: postId,
+    label,
+    position: index,
+  }));
+
+  const { error: optionsErr } = await supabase.from('global_post_poll_options').insert(optionRows);
+  if (optionsErr) {
+    console.error('createGlobalPollPost options', optionsErr);
+    await supabase.from('global_posts').delete().eq('id', postId);
+    return friendlyPostError(optionsErr);
+  }
+
+  return null;
+}
+
+export async function castGlobalPollVote(input: {
+  postId: string;
+  optionId: string;
+  userId: string;
+}): Promise<string | null> {
+  const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+  if (refreshErr || !refreshed.session?.access_token) {
+    return 'Session expired. Sign in again with OTP.';
+  }
+
+  if (refreshed.session.user.id !== input.userId) {
+    return 'Session mismatch. Sign out and sign in again.';
+  }
+
+  const { data: post, error: postErr } = await supabase
+    .from('global_posts')
+    .select('id, post_type, poll_ends_at')
+    .eq('id', input.postId)
+    .maybeSingle();
+
+  if (postErr || !post) return 'Poll not found.';
+  if (post.post_type !== 'poll') return 'This post is not a poll.';
+  if (post.poll_ends_at && new Date(post.poll_ends_at as string).getTime() <= Date.now()) {
+    return 'This poll has ended.';
+  }
+
+  const { data: option, error: optErr } = await supabase
+    .from('global_post_poll_options')
+    .select('id')
+    .eq('id', input.optionId)
+    .eq('post_id', input.postId)
+    .maybeSingle();
+
+  if (optErr || !option) return 'Invalid poll option.';
+
+  const { error } = await supabase.from('global_post_poll_votes').upsert(
+    {
+      post_id: input.postId,
+      option_id: input.optionId,
+      user_id: input.userId,
+    },
+    { onConflict: 'post_id,user_id' },
+  );
+
+  if (error) return friendlyPostError(error);
   return null;
 }
 
@@ -213,6 +614,7 @@ export async function updateGlobalPost(input: {
   postType?: GlobalPostType;
   petName?: string;
   mediaStorageKey?: string | null;
+  originalMediaStorageKey?: string | null;
 }): Promise<string | null> {
   const patch: Record<string, unknown> = {
     body: input.body.trim(),
@@ -221,6 +623,9 @@ export async function updateGlobalPost(input: {
   };
   if (input.postType) patch.post_type = input.postType;
   if (input.mediaStorageKey !== undefined) patch.media_storage_key = input.mediaStorageKey;
+  if (input.originalMediaStorageKey !== undefined) {
+    patch.original_media_storage_key = input.originalMediaStorageKey;
+  }
   const { error } = await supabase.from('global_posts').update(patch).eq('id', input.postId);
   if (error) return friendlyPostError(error);
   return null;
@@ -395,6 +800,8 @@ export function subscribeGlobalCommunity(onChange: () => void): () => void {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'global_posts' }, onChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'global_post_likes' }, onChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'global_post_comments' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'global_post_poll_votes' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'global_post_event_rsvps' }, onChange)
     .subscribe();
 
   return () => {

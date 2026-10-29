@@ -89,6 +89,7 @@ export function mapGlobalPost(
   photoUrls: Map<string, string> = new Map(),
 ): GlobalPost {
   const storageKey = (row.media_storage_key as string | null) ?? null;
+  const originalStorageKey = (row.original_media_storage_key as string | null) ?? null;
   const authorId = row.author_id as string;
   return {
     id: row.id as string,
@@ -98,6 +99,23 @@ export function mapGlobalPost(
     petName: (row.pet_name as string | null) ?? null,
     mediaStorageKey: storageKey,
     mediaUrl: mediaPublicUrl(storageKey),
+    originalMediaStorageKey: originalStorageKey,
+    originalMediaUrl: mediaPublicUrl(originalStorageKey),
+    pollTitle: (row.poll_title as string | null) ?? null,
+    pollEndsAt: (row.poll_ends_at as string | null) ?? null,
+    eventTitle: (row.event_title as string | null) ?? null,
+    eventStartsAt: (row.event_starts_at as string | null) ?? null,
+    eventLocation: (row.event_location as string | null) ?? null,
+    eventVisibility: (row.event_visibility as 'open' | 'invite_only' | null) ?? null,
+    locationName: (row.location_name as string | null) ?? null,
+    locationLat:
+      row.location_lat === null || row.location_lat === undefined
+        ? null
+        : Number(row.location_lat),
+    locationLng:
+      row.location_lng === null || row.location_lng === undefined
+        ? null
+        : Number(row.location_lng),
     likeCount: Number(row.like_count ?? 0),
     commentCount: Number(row.comment_count ?? 0),
     createdAt: row.created_at as string,
@@ -150,6 +168,7 @@ export async function createGlobalPost(input: {
   postType?: GlobalPostType;
   petName?: string;
   mediaStorageKey?: string;
+  originalMediaStorageKey?: string | null;
 }): Promise<string | null> {
   const { error } = await supabase.from('global_posts').insert({
     author_id: input.authorId,
@@ -157,6 +176,7 @@ export async function createGlobalPost(input: {
     post_type: input.postType ?? 'text',
     pet_name: input.petName?.trim() || null,
     media_storage_key: input.mediaStorageKey ?? null,
+    original_media_storage_key: input.originalMediaStorageKey ?? null,
   });
   if (error) return error.message;
   return null;
@@ -168,6 +188,7 @@ export async function updateGlobalPost(input: {
   postType?: GlobalPostType;
   petName?: string;
   mediaStorageKey?: string | null;
+  originalMediaStorageKey?: string | null;
 }): Promise<string | null> {
   const patch: Record<string, unknown> = {
     body: input.body.trim(),
@@ -176,6 +197,9 @@ export async function updateGlobalPost(input: {
   };
   if (input.postType) patch.post_type = input.postType;
   if (input.mediaStorageKey !== undefined) patch.media_storage_key = input.mediaStorageKey;
+  if (input.originalMediaStorageKey !== undefined) {
+    patch.original_media_storage_key = input.originalMediaStorageKey;
+  }
   const { error } = await supabase.from('global_posts').update(patch).eq('id', input.postId);
   return error?.message ?? null;
 }

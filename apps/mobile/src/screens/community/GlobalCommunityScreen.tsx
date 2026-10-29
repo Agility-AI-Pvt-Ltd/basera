@@ -596,6 +596,8 @@ type ComposerSubmit = {
   petName: string;
   media: PickedMedia | null;
   clearMedia: boolean;
+  /** Library URI before crop; uploaded as original for web feed. */
+  originalImageUri?: string | null;
 };
 
 function ComposePostModal({
@@ -751,7 +753,15 @@ function ComposePostModal({
             <Pressable
               style={[styles.postBtn, !canSubmit && styles.commentsSendDisabled]}
               disabled={!canSubmit}
-              onPress={() => onSubmit({ body, petName, media, clearMedia })}>
+              onPress={() =>
+                onSubmit({
+                  body,
+                  petName,
+                  media,
+                  clearMedia,
+                  originalImageUri: media?.kind === 'image' ? cropSource : null,
+                })
+              }>
               {posting ? (
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
@@ -941,6 +951,7 @@ export default function GlobalCommunityScreen() {
 
     setPosting(true);
     let mediaKey: string | null | undefined;
+    let originalMediaKey: string | null | undefined;
     let postType: GlobalPostType | undefined;
     if (input.media) {
       const key = await uploadCommunityMedia(
@@ -956,8 +967,23 @@ export default function GlobalCommunityScreen() {
       }
       mediaKey = key;
       postType = input.media.kind === 'video' ? 'video' : 'photo';
+
+      if (
+        input.media.kind === 'image' &&
+        input.originalImageUri &&
+        input.originalImageUri !== input.media.uri
+      ) {
+        const originalKey = await uploadCommunityMedia(
+          userId,
+          input.originalImageUri,
+          'image',
+          input.media.mimeType,
+        );
+        if (originalKey) originalMediaKey = originalKey;
+      }
     } else if (input.clearMedia) {
       mediaKey = null;
+      originalMediaKey = null;
       postType = body.includes('?') ? 'question' : 'text';
     } else if (composer.mode === 'create') {
       postType = body.includes('?') ? 'question' : 'text';
@@ -971,6 +997,7 @@ export default function GlobalCommunityScreen() {
             petName: input.petName,
             postType,
             mediaStorageKey: mediaKey,
+            originalMediaStorageKey: originalMediaKey,
           })
         : await createGlobalPost({
             authorId: userId,
@@ -978,6 +1005,7 @@ export default function GlobalCommunityScreen() {
             petName: input.petName.trim() || undefined,
             postType,
             mediaStorageKey: mediaKey ?? undefined,
+            originalMediaStorageKey: originalMediaKey ?? null,
           });
     setPosting(false);
     if (err) {
