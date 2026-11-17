@@ -83,6 +83,41 @@ export default function SettingsMenuScreen() {
       onPress: () => navigation.navigate('EditLocation'),
     },
     {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: 'bell',
+      onPress: () => Alert.alert('Notifications', 'Notification preferences are coming soon.'),
+    },
+    {
+      id: 'privacy',
+      label: 'Privacy',
+      icon: 'shield',
+      onPress: () => Alert.alert('Privacy', 'Privacy controls are coming soon.'),
+    },
+    {
+      id: 'help',
+      label: 'Help & support',
+      icon: 'help-circle',
+      onPress: () => Alert.alert('Help', 'Email support@tailzclub.com for help.'),
+    },
+    {
+      id: 'about',
+      label: 'About The Tailz Club',
+      icon: 'info',
+      onPress: () => Alert.alert('The Tailz Club', 'Pet care, adoption, and community for Indian pet parents.'),
+    },
+    {
+      id: 'delete',
+      label: 'Delete account',
+      icon: 'trash-2',
+      onPress: () =>
+        Alert.alert(
+          'Delete account',
+          'Account deletion is handled by support while we finish self-serve delete. Contact support@tailzclub.com.',
+        ),
+      destructive: true,
+    },
+    {
       id: 'logout',
       label: loggingOut ? 'Logging out…' : 'Log out',
       icon: 'log-out',
@@ -103,7 +138,14 @@ export default function SettingsMenuScreen() {
 
       <View style={styles.profileCard}>
         <UserAvatar photoUri={profile?.photoUri} size={72} />
-        <Text style={styles.name}>{profile?.name || 'Your profile'}</Text>
+        <Text style={styles.name}>
+          {profile?.name?.trim() || 'Add your name'}
+        </Text>
+        {!profile?.name?.trim() ? (
+          <Pressable onPress={() => navigation.navigate('EditPersonalInfo')}>
+            <Text style={styles.addNameLink}>Tap to add your name</Text>
+          </Pressable>
+        ) : null}
         <Text style={styles.phone}>{email || '—'}</Text>
         {profile?.city ? (
           <Text style={styles.location}>
@@ -176,6 +218,12 @@ const styles = StyleSheet.create({
     fontWeight: '200',
     color: '#111827',
     marginTop: 8,
+  },
+  addNameLink: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: BRAND,
+    marginTop: 4,
   },
   phone: { fontSize: 14, color: '#6B7280' },
   location: { fontSize: 13, color: '#9CA3AF' },

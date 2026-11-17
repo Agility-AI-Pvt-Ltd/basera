@@ -1,5 +1,4 @@
 import Feather from '@expo/vector-icons/Feather';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,22 +6,22 @@ import { useNavigation } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ListingCard } from '@/components/adopt/ListingCard';
-import { CoverImage } from '@/components/CoverImage';
-import { LinearGradient } from '@/components/LinearGradient';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
-import { HOME_IMAGES } from '@/constants/home';
+import { scrollPaddingBelowTabBar } from '@/constants/layout';
+import { pluralPetCount } from '@/lib/listingDisplay';
 import { useAdoptionBrowse } from '@/hooks/useAdoption';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import type { AdoptStackParamList, MainTabParamList } from '@/src/navigation/types';
@@ -37,29 +36,27 @@ type Nav = CompositeNavigationProp<
 const BRAND = '#7C3AED';
 const BRAND_LIGHT = '#EDE9FE';
 const H_PADDING = 16;
-const GRID_GAP = 12;
 
 type SpeciesChip = 'all' | PetSpecies | 'rabbit';
 type SortOption = 'newest' | 'oldest';
 
-const SPECIES_CHIPS: { id: SpeciesChip; label: string; emoji?: string }[] = [
+const SPECIES_CHIPS: { id: SpeciesChip; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: 'dog', label: 'Dogs', emoji: '🐶' },
-  { id: 'cat', label: 'Cats', emoji: '🐱' },
-  { id: 'bird', label: 'Birds', emoji: '🐦' },
-  { id: 'rabbit', label: 'Rabbits', emoji: '🐰' },
+  { id: 'dog', label: 'Dogs' },
+  { id: 'cat', label: 'Cats' },
+  { id: 'bird', label: 'Birds' },
+  { id: 'rabbit', label: 'Other' },
 ];
 
 export default function AdoptScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
-  const cardWidth = (windowWidth - H_PADDING * 2 - GRID_GAP) / 2;
   const { profile } = useUserProfile();
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
-  const [cityFilterOpen, setCityFilterOpen] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [draftCity, setDraftCity] = useState('');
   const [speciesChip, setSpeciesChip] = useState<SpeciesChip>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
@@ -109,16 +106,14 @@ export default function AdoptScreen() {
 
   const listHeader = (
     <View style={styles.headerBlock}>
-      <View style={styles.topRow}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => navigation.getParent()?.navigate('HomeTab')}
-          accessibilityLabel="Back to home">
-          <Feather name="chevron-left" size={22} color="#111827" />
-        </Pressable>
+      <View style={styles.titleRow}>
+        <Text style={styles.pageTitle}>Adopt</Text>
         <Pressable
           style={styles.locationPill}
-          onPress={() => setCityFilterOpen((v) => !v)}
+          onPress={() => {
+            setDraftCity(city);
+            setFilterSheetOpen(true);
+          }}
           accessibilityLabel="Change city filter">
           <Feather name="map-pin" size={14} color={BRAND} />
           <Text style={styles.locationPillText} numberOfLines={1}>
@@ -126,39 +121,6 @@ export default function AdoptScreen() {
           </Text>
           <Feather name="chevron-down" size={14} color="#9CA3AF" />
         </Pressable>
-        <Pressable
-          style={styles.hubBtn}
-          onPress={() => navigation.navigate('MyAdoption')}
-          accessibilityLabel="My adoption">
-          <Feather name="layers" size={18} color={BRAND} />
-        </Pressable>
-      </View>
-
-      <View style={styles.heroWrap}>
-        <LinearGradient
-          colors={['#EDE9FE', '#F5F3FF', '#FAFAFF']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.heroBanner}>
-          <FontAwesome name="paw" size={24} color="rgba(124, 58, 237, 0.2)" style={styles.heroPaw} />
-          <View style={styles.heroCopy}>
-            <Text style={styles.heroTitle}>
-              Adopt a <Text style={styles.heroTitleAccent}>Pet</Text>
-            </Text>
-            <Text style={styles.heroSubtitle}>Give a loving home to a furry friend</Text>
-          </View>
-          <Pressable
-            style={styles.listBtn}
-            onPress={() => navigation.navigate('CreateListing')}>
-            <Feather name="plus" size={18} color="#FFFFFF" />
-            <Text style={styles.listBtnText} numberOfLines={1}>
-              List a pet for adoption
-            </Text>
-            <Feather name="chevron-right" size={18} color="#FFFFFF" />
-          </Pressable>
-          <CoverImage source={HOME_IMAGES.pets.goldenRetriever} style={styles.heroDog} />
-          <CoverImage source={HOME_IMAGES.categories.cats} style={styles.heroCat} />
-        </LinearGradient>
       </View>
 
       <View style={styles.searchRow}>
@@ -167,39 +129,26 @@ export default function AdoptScreen() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search by name, breed or keyword..."
+            placeholder="Search by name or bree..."
             placeholderTextColor="#9CA3AF"
             style={styles.searchInput}
           />
         </View>
-        <Pressable style={styles.filterBtn} accessibilityLabel="Filters">
-          <Feather name="sliders" size={20} color={BRAND} />
+        <Pressable
+          style={styles.filterBtn}
+          accessibilityLabel="Filter and sort"
+          onPress={() => {
+            setDraftCity(city);
+            setFilterSheetOpen(true);
+          }}>
+          <Feather name="sliders" size={18} color={BRAND} />
         </Pressable>
       </View>
-
-      {cityFilterOpen ? (
-        <View style={styles.cityInputRow}>
-          <Feather name="map-pin" size={16} color={BRAND} />
-          <TextInput
-            value={city}
-            onChangeText={setCity}
-            placeholder="Filter by city"
-            placeholderTextColor="#9CA3AF"
-            style={styles.cityInput}
-          />
-        </View>
-      ) : null}
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}>
-        <Pressable
-          style={[styles.cityChip, cityFilterOpen && styles.chipActive]}
-          onPress={() => setCityFilterOpen((v) => !v)}>
-          <Feather name="map-pin" size={14} color={BRAND} />
-          <Feather name="chevron-down" size={14} color="#9CA3AF" />
-        </Pressable>
+        contentContainerStyle={[styles.chipRow, styles.chipRowScrollHint]}>
         {SPECIES_CHIPS.map((chip) => {
           const active = speciesChip === chip.id;
           return (
@@ -207,7 +156,6 @@ export default function AdoptScreen() {
               key={chip.id}
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => setSpeciesChip(chip.id)}>
-              {chip.emoji ? <Text style={styles.chipEmoji}>{chip.emoji}</Text> : null}
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip.label}</Text>
             </Pressable>
           );
@@ -215,14 +163,10 @@ export default function AdoptScreen() {
       </ScrollView>
 
       <View style={styles.listMetaRow}>
-        <Text style={styles.countText}>{displayListings.length} Pets Available</Text>
-        <Pressable
-          style={styles.sortPill}
-          onPress={() => setSortBy((s) => (s === 'newest' ? 'oldest' : 'newest'))}>
-          <Feather name="sliders" size={14} color={BRAND} />
-          <Text style={styles.sortText}>{sortBy === 'newest' ? 'Newest First' : 'Oldest First'}</Text>
-          <Feather name="chevron-down" size={14} color="#9CA3AF" />
-        </Pressable>
+        <Text style={styles.countText}>{pluralPetCount(displayListings.length)}</Text>
+        <Text style={styles.nearText}>
+          near {locationLabel} · {sortBy === 'newest' ? 'Newest first' : 'Oldest first'}
+        </Text>
       </View>
     </View>
   );
@@ -238,24 +182,89 @@ export default function AdoptScreen() {
         <FlatList
           data={displayListings}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.gridRow}
           refreshing={loading}
           onRefresh={() => void reload()}
-          contentContainerStyle={{ paddingBottom: 130 }}
+          contentContainerStyle={{ paddingBottom: scrollPaddingBelowTabBar(insets.bottom) + 56 }}
           ListHeaderComponent={listHeader}
           ListEmptyComponent={
-            <Text style={styles.empty}>No active listings yet. Be the first to list a pet.</Text>
+            <View style={styles.emptyBlock}>
+              <Text style={styles.emptyTitle}>No pets listed near you yet</Text>
+              <Text style={styles.emptyBody}>
+                List a pet for adoption or get notified when new listings appear in your area.
+              </Text>
+              <Pressable
+                style={styles.emptyPrimary}
+                onPress={() => navigation.navigate('CreateListing')}>
+                <Text style={styles.emptyPrimaryText}>List a pet</Text>
+              </Pressable>
+              <Pressable
+                style={styles.emptySecondary}
+                onPress={() =>
+                  Alert.alert('Notifications', 'We will notify you when pets are listed near you.')
+                }>
+                <Text style={styles.emptySecondaryText}>Notify me when pets are listed near me</Text>
+              </Pressable>
+            </View>
           }
           renderItem={({ item }) => (
             <ListingCard
               listing={item}
-              width={cardWidth}
+              variant="feed"
               onPress={() => navigation.navigate('ListingDetail', { listingId: item.id })}
+              onAsk={() => navigation.navigate('ListingDetail', { listingId: item.id })}
+              onApply={() => navigation.navigate('ApplyAdoption', { listingId: item.id })}
             />
           )}
         />
       )}
+      <Pressable
+        style={[styles.fab, { bottom: scrollPaddingBelowTabBar(insets.bottom) - 12 }]}
+        onPress={() => navigation.navigate('CreateListing')}
+        accessibilityLabel="List a pet">
+        <Feather name="plus" size={20} color="#FFFFFF" />
+        <Text style={styles.fabText}>List a pet</Text>
+      </Pressable>
+
+      <Modal visible={filterSheetOpen} transparent animationType="slide">
+        <Pressable style={styles.sheetBackdrop} onPress={() => setFilterSheetOpen(false)} />
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <Text style={styles.sheetTitle}>Filter & sort</Text>
+          <Text style={styles.sheetLabel}>City</Text>
+          <TextInput
+            value={draftCity}
+            onChangeText={setDraftCity}
+            placeholder="Noida"
+            placeholderTextColor="#9CA3AF"
+            style={styles.sheetInput}
+          />
+          <Text style={styles.sheetLabel}>Sort</Text>
+          <View style={styles.sheetRow}>
+            {(
+              [
+                ['newest', 'Newest first'],
+                ['oldest', 'Oldest first'],
+              ] as const
+            ).map(([id, label]) => (
+              <Pressable
+                key={id}
+                style={[styles.sheetChip, sortBy === id && styles.sheetChipActive]}
+                onPress={() => setSortBy(id)}>
+                <Text style={[styles.sheetChipText, sortBy === id && styles.sheetChipTextActive]}>
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Pressable
+            style={styles.sheetApply}
+            onPress={() => {
+              setCity(draftCity);
+              setFilterSheetOpen(false);
+            }}>
+            <Text style={styles.sheetApplyText}>Apply</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -263,6 +272,36 @@ export default function AdoptScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F8F7FC', paddingHorizontal: H_PADDING },
   headerBlock: { paddingBottom: 4 },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    gap: 12,
+  },
+  pageTitle: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  fab: {
+    position: 'absolute',
+    right: H_PADDING,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: BRAND,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 999,
+    shadowColor: BRAND,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  fabText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  filterBtnText: { fontSize: 13, fontWeight: '700', color: BRAND },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -282,7 +321,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   locationPill: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -455,9 +493,9 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, fontWeight: '600', color: '#374151' },
   chipTextActive: { color: '#FFFFFF' },
   listMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
     marginBottom: 12,
   },
   countText: {
@@ -478,6 +516,65 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   sortText: { fontSize: 12, fontWeight: '600', color: '#374151' },
-  gridRow: { gap: GRID_GAP },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontSize: 14 },
+  chipRowScrollHint: { paddingRight: 48 },
+  nearText: { fontSize: 13, color: '#4B5563', fontWeight: '500' },
+  emptyBlock: { marginTop: 28, paddingHorizontal: 8, gap: 12, alignItems: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center' },
+  emptyBody: { fontSize: 14, color: '#374151', textAlign: 'center', lineHeight: 20 },
+  emptyPrimary: {
+    marginTop: 8,
+    width: '100%',
+    backgroundColor: BRAND,
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  emptyPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  emptySecondary: {
+    width: '100%',
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: BRAND,
+  },
+  emptySecondaryText: { color: BRAND, fontWeight: '700', fontSize: 14, textAlign: 'center' },
+  sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    gap: 10,
+  },
+  sheetTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  sheetLabel: { fontSize: 13, fontWeight: '600', color: '#6B7280', marginTop: 4 },
+  sheetInput: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#111827',
+  },
+  sheetRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  sheetChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  sheetChipActive: { backgroundColor: BRAND, borderColor: BRAND },
+  sheetChipText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  sheetChipTextActive: { color: '#FFFFFF' },
+  sheetApply: {
+    marginTop: 12,
+    backgroundColor: BRAND,
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  sheetApplyText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 });

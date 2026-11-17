@@ -64,6 +64,8 @@ export default function PetProfileFormScreen({ mode }: Props) {
   const [species, setSpecies] = useState<PetSpecies>('dog');
   const [gender, setGender] = useState<PetGender>('unknown');
   const [birthDate, setBirthDate] = useState('');
+  const [approximateAge, setApproximateAge] = useState('');
+  const [birthUnknown, setBirthUnknown] = useState(false);
   const [weightKg, setWeightKg] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoMime, setPhotoMime] = useState('image/jpeg');
@@ -194,13 +196,17 @@ export default function PetProfileFormScreen({ mode }: Props) {
         </View>
 
         <ScrollView
-          contentContainerStyle={[styles.form, { paddingBottom: insets.bottom + 24 }]}
+          contentContainerStyle={[styles.form, { paddingBottom: insets.bottom + 88 }]}
           keyboardShouldPersistTaps="handled">
           <Pressable style={styles.photoPicker} onPress={pickPhoto}>
             {photoUri ? (
               <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-            ) : (
+            ) : existingPhotoKey ? (
               <PetAvatar name={name || 'Pet'} photoStorageKey={existingPhotoKey} size={96} />
+            ) : (
+              <View style={styles.photoPlaceholder}>
+                <Feather name="camera" size={28} color="#9CA3AF" />
+              </View>
             )}
             <View style={styles.photoBadge}>
               <Feather name="camera" size={14} color="#FFFFFF" />
@@ -220,16 +226,6 @@ export default function PetProfileFormScreen({ mode }: Props) {
             />
           </Field>
 
-          <Field label="Breed">
-            <TextInput
-              value={breed}
-              onChangeText={setBreed}
-              placeholder="e.g. Labrador"
-              placeholderTextColor="#9CA3AF"
-              style={styles.input}
-            />
-          </Field>
-
           <Text style={styles.sectionLabel}>Species</Text>
           <View style={styles.chips}>
             {SPECIES.map((item) => (
@@ -241,6 +237,16 @@ export default function PetProfileFormScreen({ mode }: Props) {
               />
             ))}
           </View>
+
+          <Field label="Breed">
+            <TextInput
+              value={breed}
+              onChangeText={setBreed}
+              placeholder={`Search ${species} breeds, e.g. Labrador`}
+              placeholderTextColor="#9CA3AF"
+              style={styles.input}
+            />
+          </Field>
 
           <Text style={styles.sectionLabel}>Gender</Text>
           <View style={styles.chips}>
@@ -254,20 +260,38 @@ export default function PetProfileFormScreen({ mode }: Props) {
             ))}
           </View>
 
-          <Field label="Birth date">
-            <DatePickerField
-              value={birthDate}
-              onChange={setBirthDate}
-              placeholder="Pick a date"
-              textStyle={{ fontFamily: FONT_FAMILY }}
-            />
-          </Field>
+          {birthUnknown ? (
+            <Field label="Approximate age">
+              <TextInput
+                value={approximateAge}
+                onChangeText={setApproximateAge}
+                placeholder="e.g. 2 years, rescued adult"
+                placeholderTextColor="#9CA3AF"
+                style={styles.input}
+              />
+            </Field>
+          ) : (
+            <Field label="Birth date">
+              <DatePickerField
+                value={birthDate}
+                onChange={setBirthDate}
+                placeholder="Pick a date"
+                textStyle={{ fontFamily: FONT_FAMILY }}
+              />
+            </Field>
+          )}
+          <Pressable
+            style={styles.unknownBirthToggle}
+            onPress={() => setBirthUnknown((v) => !v)}>
+            <Feather name={birthUnknown ? 'check-square' : 'square'} size={18} color={BRAND} />
+            <Text style={styles.unknownBirthText}>I don&apos;t know the exact date</Text>
+          </Pressable>
 
           <Field label="Weight (kg)">
             <TextInput
               value={weightKg}
               onChangeText={setWeightKg}
-              placeholder="7.9"
+              placeholder="e.g. 7.5"
               keyboardType="decimal-pad"
               placeholderTextColor="#9CA3AF"
               style={styles.input}
@@ -276,6 +300,14 @@ export default function PetProfileFormScreen({ mode }: Props) {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
+          {mode === 'edit' ? (
+            <Pressable style={styles.deleteBtn} onPress={handleDelete} disabled={loading}>
+              <Text style={styles.deleteBtnText}>Delete pet</Text>
+            </Pressable>
+          ) : null}
+        </ScrollView>
+
+        <View style={[styles.saveBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <Pressable
             style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
             onPress={handleSave}
@@ -288,13 +320,7 @@ export default function PetProfileFormScreen({ mode }: Props) {
               </Text>
             )}
           </Pressable>
-
-          {mode === 'edit' ? (
-            <Pressable style={styles.deleteBtn} onPress={handleDelete} disabled={loading}>
-              <Text style={styles.deleteBtnText}>Delete pet</Text>
-            </Pressable>
-          ) : null}
-        </ScrollView>
+        </View>
       </View>
 
       <ImageCropModal
@@ -358,6 +384,29 @@ const styles = StyleSheet.create({
   form: { paddingHorizontal: 20, gap: 16 },
   photoPicker: { alignItems: 'center', gap: 10, marginBottom: 4 },
   photoPreview: { width: 96, height: 96, borderRadius: 48 },
+  photoPlaceholder: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  unknownBirthToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: -4 },
+  unknownBirthText: { fontSize: 14, color: '#374151', fontWeight: '600' },
+  saveBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E5E7EB',
+  },
   photoBadge: {
     position: 'absolute',
     right: '36%',

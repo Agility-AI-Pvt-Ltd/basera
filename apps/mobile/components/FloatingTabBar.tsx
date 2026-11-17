@@ -1,22 +1,21 @@
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const BRAND_PURPLE = '#A78BFA';
-const TAB_SIZE = 54;
-const BAR_HEIGHT = 70;
+import { Text } from '@/components/Themed';
+import { FONT_FAMILY } from '@/constants/Fonts';
+
+const BRAND = '#5B21B6';
+const BRAND_MUTED = '#9CA3AF';
+const ACTIVE_BG = '#EDE9FE';
 
 type TabConfig = {
   routeName: string;
   icon: React.ComponentProps<typeof Feather>['name'];
+  faIcon?: React.ComponentProps<typeof FontAwesome>['name'];
   label: string;
 };
 
@@ -24,16 +23,10 @@ const TABS: TabConfig[] = [
   { routeName: 'HomeTab', icon: 'home', label: 'Home' },
   { routeName: 'AdoptTab', icon: 'heart', label: 'Adopt' },
   { routeName: 'CommunityTab', icon: 'users', label: 'Community' },
-  { routeName: 'PetsTab', icon: 'smile', label: 'Pets' },
+  { routeName: 'PetsTab', icon: 'tag', faIcon: 'paw', label: 'My Pets' },
 ];
 
-const SPRING = {
-  damping: 18,
-  stiffness: 380,
-  mass: 0.55,
-};
-
-/** Nested routes where the floating tab bar should be hidden. */
+/** Nested routes where the tab bar should be hidden. */
 const HIDE_TAB_BAR_ROUTES: Record<string, Set<string>> = {
   HomeTab: new Set(['SettingsMenu', 'EditPersonalInfo', 'EditPhoto', 'EditLocation']),
   AdoptTab: new Set([
@@ -67,7 +60,6 @@ const HIDE_TAB_BAR_ROUTES: Record<string, Set<string>> = {
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const indicatorX = useSharedValue(0);
 
   const activeTabRoute = state.routes[state.index];
   const nestedRouteName =
@@ -79,85 +71,62 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     (tab) => state.routes.find((r) => r.name === tab.routeName)!,
   ).filter(Boolean);
 
-  const activeRouteKey = state.routes[state.index]?.key;
-  const activeTabIndex = tabRoutes.findIndex((r) => r.key === activeRouteKey);
-  const safeActiveIndex = activeTabIndex >= 0 ? activeTabIndex : 0;
-
-  useEffect(() => {
-    indicatorX.value = withSpring(safeActiveIndex, SPRING);
-  }, [safeActiveIndex, indicatorX]);
-
-  const barWidth = TAB_SIZE * TABS.length + 32;
-  const slotWidth = barWidth / TABS.length;
-
-  const bubbleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: indicatorX.value * slotWidth + slotWidth / 2 - TAB_SIZE / 2 }],
-  }));
-
   if (hideTabBar) {
     return null;
   }
 
   return (
     <View
-      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) + 16 }]}
+      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 8) }]}
       pointerEvents="box-none">
-      <View style={[styles.shadow, { width: barWidth }]}>
-        <View style={[styles.bar, { width: barWidth, height: BAR_HEIGHT }]}>
-          {TABS.slice(0, -1).map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.connector,
-                {
-                  left: slotWidth * (i + 1) - 12,
-                  width: 24,
-                },
-              ]}
-            />
-          ))}
+      <View style={styles.bar}>
+        {TABS.map((tab) => {
+          const route = tabRoutes.find((r) => r.name === tab.routeName);
+          if (!route) return null;
 
-          <Animated.View style={[styles.activeBubble, bubbleStyle]}>
-            <View style={styles.activeBubbleInner} />
-          </Animated.View>
+          const routeIndex = state.routes.indexOf(route);
+          const isFocused = state.index === routeIndex;
+          const { options } = descriptors[route.key];
 
-          {TABS.map((tab) => {
-            const route = tabRoutes.find((r) => r.name === tab.routeName);
-            if (!route) return null;
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
 
-            const routeIndex = state.routes.indexOf(route);
-            const isFocused = state.index === routeIndex;
-            const { options } = descriptors[route.key];
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
 
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
-
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name, route.params);
-              }
-            };
-
-            return (
-              <Pressable
-                key={route.key}
-                accessibilityRole="button"
-                accessibilityState={isFocused ? { selected: true } : {}}
-                accessibilityLabel={options.tabBarAccessibilityLabel ?? tab.label}
-                onPress={onPress}
-                style={styles.tabSlot}>
-                <Feather
-                  name={tab.icon}
-                  size={22}
-                  color={isFocused ? '#FFFFFF' : '#374151'}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel ?? tab.label}
+              onPress={onPress}
+              style={styles.tabSlot}>
+              <View style={[styles.iconPill, isFocused && styles.iconPillActive]}>
+                {tab.faIcon ? (
+                  <FontAwesome
+                    name={tab.faIcon}
+                    size={20}
+                    color={isFocused ? BRAND : BRAND_MUTED}
+                  />
+                ) : (
+                  <Feather
+                    name={tab.icon}
+                    size={22}
+                    color={isFocused ? BRAND : BRAND_MUTED}
+                  />
+                )}
+              </View>
+              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>{tab.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -169,54 +138,39 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
-  },
-  shadow: {
-    borderRadius: BAR_HEIGHT / 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.14,
-    shadowRadius: 28,
-    elevation: 14,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E5E7EB',
+    paddingTop: 8,
   },
   bar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: BAR_HEIGHT / 2,
-    backgroundColor: '#FFFFFF',
-    overflow: 'visible',
-  },
-  connector: {
-    position: 'absolute',
-    top: 8,
-    height: BAR_HEIGHT - 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    zIndex: 0,
-  },
-  activeBubble: {
-    position: 'absolute',
-    top: (BAR_HEIGHT - TAB_SIZE) / 2,
-    left: 0,
-    width: TAB_SIZE,
-    height: TAB_SIZE,
-    zIndex: 1,
-  },
-  activeBubbleInner: {
-    flex: 1,
-    borderRadius: TAB_SIZE / 2,
-    backgroundColor: BRAND_PURPLE,
-    shadowColor: BRAND_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 6,
+    alignItems: 'flex-start',
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
   },
   tabSlot: {
     flex: 1,
-    height: BAR_HEIGHT,
     alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
+    gap: 4,
+    paddingVertical: 4,
+  },
+  iconPill: {
+    paddingHorizontal: 22,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  iconPillActive: {
+    backgroundColor: ACTIVE_BG,
+  },
+  tabLabel: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 11,
+    color: BRAND_MUTED,
+    fontWeight: '500',
+  },
+  tabLabelActive: {
+    color: BRAND,
+    fontWeight: '700',
   },
 });

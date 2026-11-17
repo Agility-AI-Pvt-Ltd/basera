@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -7,19 +8,45 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PetAvatar } from '@/components/pets/PetAvatar';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
+import { scrollPaddingBelowTabBar } from '@/constants/layout';
 import { usePets } from '@/hooks/usePets';
 import type { PetsStackParamList } from '@/src/navigation/types';
 import { computePetAge } from '@/types/pet';
 
-const TAB_BAR_CLEARANCE = 120;
 const BRAND = '#7C3AED';
 
 type Nav = NativeStackNavigationProp<PetsStackParamList, 'MyPetsList'>;
 
+function EmptyProfilePreview() {
+  return (
+    <View style={styles.previewCard}>
+      <Text style={styles.previewLabel}>What you get</Text>
+      <View style={styles.previewRow}>
+        <View style={styles.previewIcon}>
+          <Feather name="calendar" size={16} color={BRAND} />
+        </View>
+        <Text style={styles.previewText}>Care reminders with vet, grooming, and meds</Text>
+      </View>
+      <View style={styles.previewRow}>
+        <View style={styles.previewIcon}>
+          <Feather name="heart" size={16} color={BRAND} />
+        </View>
+        <Text style={styles.previewText}>Health schedule card with overdue highlights</Text>
+      </View>
+      <View style={styles.previewRow}>
+        <View style={styles.previewIcon}>
+          <Feather name="file-text" size={16} color={BRAND} />
+        </View>
+        <Text style={styles.previewText}>Vaccination documents in one place</Text>
+      </View>
+    </View>
+  );
+}
+
 export default function MyPetsListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
-  const { pets, isReady, error, loadPets } = usePets();
+  const { pets, isReady, error } = usePets();
 
   if (!isReady) {
     return (
@@ -32,7 +59,7 @@ export default function MyPetsListScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 12 }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>My pets</Text>
+        <Text style={styles.title}>My Pets</Text>
         <Pressable
           style={styles.addBtn}
           onPress={() => navigation.navigate('CreatePetProfile')}>
@@ -43,25 +70,31 @@ export default function MyPetsListScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {pets.length === 0 ? (
-        <View style={styles.empty}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.empty,
+            { paddingBottom: scrollPaddingBelowTabBar(insets.bottom) },
+          ]}
+          showsVerticalScrollIndicator={false}>
           <View style={styles.emptyIcon}>
-            <Feather name="heart" size={32} color={BRAND} />
+            <FontAwesome name="paw" size={28} color={BRAND} />
           </View>
-          <Text style={styles.emptyTitle}>No pet profiles yet</Text>
+          <Text style={styles.emptyTitle}>Let&apos;s add your first pet</Text>
           <Text style={styles.emptyBody}>
-            Create a profile to track health, training, nutrition, and vaccination documents.
+            Track care tasks, health visits, and documents from one profile.
           </Text>
+          <EmptyProfilePreview />
           <Pressable
             style={styles.primaryBtn}
             onPress={() => navigation.navigate('CreatePetProfile')}>
             <Text style={styles.primaryBtnText}>Create pet profile</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       ) : (
         <ScrollView
           contentContainerStyle={[
             styles.grid,
-            { paddingBottom: TAB_BAR_CLEARANCE + insets.bottom },
+            { paddingBottom: scrollPaddingBelowTabBar(insets.bottom) },
           ]}
           showsVerticalScrollIndicator={false}>
           {pets.map((pet) => (
@@ -111,7 +144,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FONT_FAMILY,
     fontSize: 28,
-    fontWeight: '200',
+    fontWeight: '700',
     color: '#111827',
   },
   addBtn: {
@@ -128,11 +161,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   empty: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: TAB_BAR_CLEARANCE,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    gap: 12,
   },
   emptyIcon: {
     width: 72,
@@ -141,74 +174,88 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3E8FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
   emptyTitle: {
     fontFamily: FONT_FAMILY,
     fontSize: 22,
-    fontWeight: '200',
+    fontWeight: '700',
     color: '#111827',
-    marginBottom: 8,
+    textAlign: 'center',
   },
   emptyBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#6B7280',
+    fontSize: 14,
+    color: '#4B5563',
     textAlign: 'center',
-    marginBottom: 24,
+    lineHeight: 20,
   },
+  previewCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  previewLabel: { fontSize: 12, fontWeight: '700', color: '#6B7280', letterSpacing: 0.4 },
+  previewRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  previewIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F5F3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewText: { flex: 1, fontSize: 14, color: '#374151' },
   primaryBtn: {
+    width: '100%',
     backgroundColor: BRAND,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
     borderRadius: 999,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 8,
   },
   primaryBtnText: {
     color: '#FFFFFF',
-    fontFamily: FONT_FAMILY,
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: '200',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
     gap: 12,
+    paddingHorizontal: 20,
   },
   card: {
     width: '47%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 16,
     alignItems: 'center',
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   addCard: {
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
     borderStyle: 'dashed',
+    borderColor: '#C4B5FD',
     justifyContent: 'center',
-    minHeight: 160,
-  },
-  addLabel: {
-    fontSize: 14,
-    color: BRAND,
-    fontWeight: '600',
+    minHeight: 140,
   },
   petName: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 17,
-    fontWeight: '200',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#111827',
   },
   petMeta: {
     fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
+    color: '#6B7280',
+  },
+  addLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BRAND,
   },
 });

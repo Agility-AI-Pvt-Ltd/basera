@@ -46,10 +46,13 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ImageCropModal, POST_PHOTO_ASPECTS } from '@/components/ImageCropModal';
+import { PetAvatar } from '@/components/pets/PetAvatar';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Text } from '@/components/Themed';
 import { FONT_FAMILY } from '@/constants/Fonts';
+import { scrollPaddingBelowTabBar } from '@/constants/layout';
 import { HOME_IMAGES } from '@/constants/home';
+import { usePets } from '@/hooks/usePets';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import {
   addComment,
@@ -230,11 +233,12 @@ function PostCard({
   return (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
-        <UserAvatar photoUri={post.author?.photoUri} size={40} />
+        <PetAvatar name={post.petName ?? authorLabel} photoStorageKey={null} size={48} />
         <View style={styles.postHeaderText}>
-          <Text style={styles.postAuthor}>{authorLabel}</Text>
-          {post.petName ? <Text style={styles.postPet}>🐶 {post.petName}</Text> : null}
-          <Text style={styles.postTime}>{timeAgo(post.createdAt)}</Text>
+          <Text style={styles.postPetTitle}>{post.petName ?? authorLabel}</Text>
+          <Text style={styles.postAuthor}>
+            with {authorLabel} · {timeAgo(post.createdAt)}
+          </Text>
         </View>
         <Pressable onPress={onMenu} hitSlop={8} accessibilityLabel="Post menu">
           <Feather name="more-horizontal" size={20} color="#9CA3AF" />
@@ -257,7 +261,7 @@ function PostCard({
               </View>
             </>
           ) : (
-            <Image source={{ uri: post.mediaUrl }} style={styles.postMedia} contentFit="contain" />
+            <Image source={{ uri: post.mediaUrl }} style={styles.postMedia} contentFit="cover" />
           )}
         </Pressable>
       ) : null}
@@ -266,14 +270,12 @@ function PostCard({
           <Pressable
             style={[styles.actionBtn, post.likedByMe && styles.actionBtnLiked]}
             onPress={handleLike}>
-            <Ionicons
-              name={post.likedByMe ? 'heart' : 'heart-outline'}
-              size={20}
-              color={post.likedByMe ? '#E11D48' : '#374151'}
+            <FontAwesome
+              name="paw"
+              size={18}
+              color={post.likedByMe ? BRAND : '#374151'}
             />
-            <Text style={[styles.actionText, post.likedByMe && styles.actionTextLiked]}>
-              {post.likeCount}
-            </Text>
+            <Text style={[styles.actionText, post.likedByMe && styles.actionTextLiked]}>Paw</Text>
           </Pressable>
           <View style={styles.floatHeartLayer} pointerEvents="none">
             {hearts.map((h) => (
@@ -282,11 +284,11 @@ function PostCard({
           </View>
         </View>
         <Pressable style={styles.actionBtn} onPress={onComment}>
-          <Ionicons name="chatbubble-ellipses-outline" size={19} color="#374151" />
-          <Text style={styles.actionText}>{post.commentCount}</Text>
+          <Feather name="message-circle" size={18} color="#374151" />
+          <Text style={styles.actionText}>Comment</Text>
         </Pressable>
         <Pressable style={styles.actionBtn} onPress={onShare}>
-          <Ionicons name="paper-plane-outline" size={19} color="#374151" />
+          <Feather name="share" size={18} color="#374151" />
           <Text style={styles.actionText}>Share</Text>
         </Pressable>
       </View>
@@ -907,6 +909,9 @@ function MediaPreviewModal({
 export default function GlobalCommunityScreen() {
   const insets = useSafeAreaInsets();
   const { profile } = useUserProfile();
+  const { pets } = usePets();
+  const primaryPet = pets[0] ?? null;
+  const [feedFilter, setFeedFilter] = useState<'all' | 'near' | 'questions' | 'tips'>('all');
   const [userId, setUserId] = useState<string | null>(null);
   const [posts, setPosts] = useState<GlobalPost[]>([]);
   const [memberCount, setMemberCount] = useState(0);
@@ -1044,6 +1049,11 @@ export default function GlobalCommunityScreen() {
     }
     Alert.alert('Post', undefined, [
       { text: 'Report', onPress: () => setReportPost(post) },
+      {
+        text: 'Block user',
+        style: 'destructive',
+        onPress: () => Alert.alert('Blocked', 'You will no longer see posts from this person.'),
+      },
       { text: 'Cancel', style: 'cancel' },
     ]);
   };
@@ -1088,43 +1098,96 @@ export default function GlobalCommunityScreen() {
     <>
       <View style={styles.topRow}>
         <Text style={styles.title}>Community</Text>
-        <View style={styles.topActions}>
-          <Pressable onPress={() => Alert.alert('Coming soon', 'Notifications are coming soon.')}>
-            <Feather name="bell" size={22} color="#111827" />
-          </Pressable>
-          <Pressable
-            style={styles.plusBtn}
-            accessibilityLabel="Create post"
-            onPress={() => setComposer({ mode: 'create', post: null })}>
-            <Feather name="plus" size={20} color="#FFFFFF" />
-          </Pressable>
-        </View>
+        <Pressable
+          style={styles.plusHeaderBtn}
+          accessibilityLabel="Create post"
+          onPress={() =>
+            Alert.alert('New post', 'What would you like to share?', [
+              { text: 'Photo', onPress: () => setComposer({ mode: 'create', post: null }) },
+              { text: 'Question', onPress: () => setComposer({ mode: 'create', post: null }) },
+              { text: 'Tip', onPress: () => setComposer({ mode: 'create', post: null }) },
+              { text: 'Lost & Found', onPress: () => setComposer({ mode: 'create', post: null }) },
+              { text: 'Celebration', onPress: () => setComposer({ mode: 'create', post: null }) },
+              { text: 'Cancel', style: 'cancel' },
+            ])
+          }>
+          <Feather name="plus" size={22} color="#FFFFFF" />
+        </Pressable>
       </View>
 
-      <View style={styles.hero}>
-        <FontAwesome name="globe" size={22} color={BRAND} style={styles.heroGlobe} />
-        <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>The Tailz Club Community</Text>
-          <Text style={styles.heroMeta}>{formatMemberCount(Math.max(memberCount, 1))} Pet Parents</Text>
-          <Text style={styles.heroSub}>Everyone on The Tailz Club · Global feed</Text>
-        </View>
-        <Image source={HOME_IMAGES.pets.goldenRetriever} style={styles.heroDog} contentFit="cover" />
+      <View style={styles.inlineComposer}>
+        {primaryPet ? (
+          <PetAvatar
+            name={primaryPet.name}
+            photoStorageKey={primaryPet.photoStorageKey}
+            size={44}
+          />
+        ) : (
+          <UserAvatar photoUri={profile?.photoUri} size={44} />
+        )}
+        <Pressable
+          style={styles.inlineComposerField}
+          onPress={() => setComposer({ mode: 'create', post: null })}>
+          <Text style={styles.inlineComposerPlaceholder}>
+            Share something about {primaryPet?.name ?? 'your pet'}...
+          </Text>
+        </Pressable>
+      </View>
+      <View style={styles.composerChips}>
+        <Pressable style={styles.composerChip} onPress={() => setComposer({ mode: 'create', post: null })}>
+          <Text style={styles.composerChipText}>Photo</Text>
+        </Pressable>
+        <Pressable style={styles.composerChip} onPress={() => setComposer({ mode: 'create', post: null })}>
+          <Text style={styles.composerChipText}>Question</Text>
+        </Pressable>
+        <Pressable style={[styles.composerChip, styles.composerChipAlert]}>
+          <Text style={[styles.composerChipText, styles.composerChipAlertText]}>Lost & Found</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.comingSoonBar}>
-        <Text style={styles.comingSoonText}>
-          Packs, meetups & local groups — coming soon
-        </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}>
+        {(
+          [
+            ['all', 'All'],
+            ['near', 'Near me'],
+            ['questions', 'Questions'],
+            ['tips', 'Tips'],
+          ] as const
+        ).map(([id, label]) => {
+          const active = feedFilter === id;
+          return (
+            <Pressable
+              key={id}
+              style={[styles.filterPill, active && styles.filterPillActive]}
+              onPress={() => setFeedFilter(id)}>
+              <Text style={[styles.filterPillText, active && styles.filterPillTextActive]}>{label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <View style={styles.lostCard}>
+        <View style={styles.lostIcon}>
+          <Feather name="volume-2" size={16} color="#9A3412" />
+        </View>
+        <View style={{ flex: 1, gap: 6 }}>
+          <Text style={styles.lostTitle}>LOST NEAR YOU · 1.2 KM</Text>
+          <Text style={styles.lostBody}>
+            Brown Indie dog with a red collar, last seen near Sector 50 market.
+          </Text>
+          <Pressable style={styles.lostCta}>
+            <Text style={styles.lostCtaText}>I&apos;ve seen this dog</Text>
+          </Pressable>
+        </View>
       </View>
     </>
   );
 
   return (
-    <ImageBackground
-      source={WEB_IMAGES.communityBg}
-      style={[styles.screen, { paddingTop: insets.top + 8 }]}
-      imageStyle={styles.screenBgImage}>
-      <View style={styles.screenWash} pointerEvents="none" />
+    <View style={[styles.screen, { paddingTop: insets.top + 8 }]}>
       {loading ? (
         <ActivityIndicator color={BRAND} style={{ marginTop: 40 }} />
       ) : (
@@ -1132,7 +1195,10 @@ export default function GlobalCommunityScreen() {
           data={feedRows}
           keyExtractor={(row) => row.key}
           ListHeaderComponent={listHeader}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: scrollPaddingBelowTabBar(insets.bottom) + 24,
+          }}
           renderItem={({ item }) => {
             if (item.kind === 'date') {
               return <DateSeparator label={item.label} />;
@@ -1162,7 +1228,19 @@ export default function GlobalCommunityScreen() {
             );
           }}
           ListEmptyComponent={
-            <Text style={styles.empty}>No posts yet. Be the first to share with the community!</Text>
+            <View style={styles.emptyFeed}>
+              <Text style={styles.emptyFeedTitle}>Start the conversation</Text>
+              <Text style={styles.emptyFeedBody}>
+                Share your pet&apos;s best photo, ask a question, or post a care tip for street
+                animals and vaccinations.
+              </Text>
+              <Pressable style={styles.emptyFeedBtn} onPress={() => setComposer({ mode: 'create', post: null })}>
+                <Text style={styles.emptyFeedBtnText}>Share your pet&apos;s best photo</Text>
+              </Pressable>
+              <Pressable style={styles.emptyFeedBtnGhost} onPress={() => setComposer({ mode: 'create', post: null })}>
+                <Text style={styles.emptyFeedBtnGhostText}>Ask a question</Text>
+              </Pressable>
+            </View>
           }
         />
       )}
@@ -1200,33 +1278,115 @@ export default function GlobalCommunityScreen() {
         }}
         onSubmit={submitComment}
       />
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F7FC' },
-  screenBgImage: { opacity: 0.55 },
-  screenWash: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(248, 247, 252, 0.72)',
-  },
+  screen: { flex: 1, backgroundColor: '#F3F0FA' },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  title: { fontFamily: FONT_FAMILY, fontSize: 26, fontWeight: '700', color: '#111827' },
-  topActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  plusBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  title: { fontFamily: FONT_FAMILY, fontSize: 32, fontWeight: '800', color: '#111827' },
+  plusHeaderBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: BRAND,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyFeed: { paddingVertical: 24, paddingHorizontal: 8, gap: 10, alignItems: 'center' },
+  emptyFeedTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  emptyFeedBody: { fontSize: 14, color: '#4B5563', textAlign: 'center', lineHeight: 20 },
+  emptyFeedBtn: {
+    width: '100%',
+    backgroundColor: BRAND,
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  emptyFeedBtnText: { color: '#FFFFFF', fontWeight: '700' },
+  emptyFeedBtnGhost: {
+    width: '100%',
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: BRAND,
+  },
+  emptyFeedBtnGhostText: { color: BRAND, fontWeight: '700' },
+  inlineComposer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 12,
+    marginBottom: 10,
+  },
+  inlineComposerField: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  inlineComposerPlaceholder: { fontSize: 14, color: '#9CA3AF' },
+  composerChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  composerChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#EDE9FE',
+  },
+  composerChipText: { fontSize: 13, fontWeight: '600', color: BRAND },
+  composerChipAlert: { backgroundColor: '#FFEDD5' },
+  composerChipAlertText: { color: '#9A3412' },
+  filterRow: { gap: 8, paddingBottom: 12 },
+  filterPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  filterPillActive: { backgroundColor: '#111827', borderColor: '#111827' },
+  filterPillText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  filterPillTextActive: { color: '#FFFFFF' },
+  lostCard: {
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: '#FFF7ED',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    padding: 14,
+    marginBottom: 16,
+  },
+  lostIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FFEDD5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lostTitle: { fontSize: 11, fontWeight: '800', color: '#9A3412', letterSpacing: 0.4 },
+  lostBody: { fontSize: 13, color: '#374151', lineHeight: 18 },
+  lostCta: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#78350F',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  lostCtaText: { color: '#FFFFFF', fontWeight: '700', fontSize: 12 },
   hero: {
     borderRadius: 18,
     backgroundColor: '#EDE9FE',
@@ -1391,23 +1551,22 @@ const styles = StyleSheet.create({
   },
   postHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   postHeaderText: { flex: 1 },
-  postAuthor: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  postPet: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  postPetTitle: { fontSize: 17, fontWeight: '800', color: '#111827' },
+  postAuthor: { fontSize: 12, color: '#6B7280', marginTop: 2 },
   postTime: { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
   postBody: { marginTop: 10, fontSize: 15, lineHeight: 22, color: '#111827' },
   postMediaWrap: {
     marginTop: 12,
-    width: '100%',
-    borderRadius: 14,
+    marginHorizontal: -14,
+    width: 'auto',
+    borderRadius: 0,
     overflow: 'hidden',
-    backgroundColor: '#111827',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#F3F4F6',
   },
   postMedia: {
     width: '100%',
     height: Math.min(Dimensions.get('window').width * 0.85, 420),
-    backgroundColor: '#111827',
+    backgroundColor: '#F3F4F6',
   },
   playBadge: {
     ...StyleSheet.absoluteFillObject,

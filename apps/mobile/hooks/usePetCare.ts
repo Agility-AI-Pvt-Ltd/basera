@@ -25,42 +25,46 @@ function mapHealth(row: PetHealthEventRow): PetHealthEvent {
   };
 }
 
+function dateOffsetDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 async function seedDefaultCare(petId: string) {
-  const today = todayIso();
   await supabase.from('pet_health_events').insert([
+    {
+      pet_id: petId,
+      category: 'medicine',
+      title: 'Antiparasitic tablet',
+      subtitle: '10:00 AM',
+      event_date: dateOffsetDays(-5),
+    },
     {
       pet_id: petId,
       category: 'vet_visit',
       title: 'Vet visit',
-      subtitle: 'Dental check',
-      event_date: today,
+      subtitle: '11:00 AM · Dental check',
+      event_date: dateOffsetDays(2),
     },
     {
       pet_id: petId,
       category: 'grooming',
       title: 'Grooming',
-      subtitle: 'Wash and cut',
-      event_date: today,
-    },
-    {
-      pet_id: petId,
-      category: 'medicine',
-      title: 'Medicines',
-      subtitle: 'Antiparasitic tablets',
-      event_date: today,
+      subtitle: '4:00 PM · Wash and cut',
+      event_date: dateOffsetDays(12),
     },
     {
       pet_id: petId,
       category: 'vaccination',
       title: 'Vaccination',
-      subtitle: 'Rabies shot',
-      event_date: today,
+      subtitle: '10:00 AM · Rabies',
+      event_date: dateOffsetDays(26),
       notes:
         'After vaccination, you will be given a veterinary passport indicating the date of vaccination and the type of vaccine.',
-      provider_name: 'Doctor Turner',
+      provider_name: 'Turner',
     },
   ]);
-
 }
 
 export function usePetCare(petId: string | undefined) {

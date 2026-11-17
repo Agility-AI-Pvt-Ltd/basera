@@ -42,7 +42,7 @@ export const CATEGORIES: Category[] = [
   { id: 'dogs', label: 'Dogs', image: HOME_IMAGES.categories.dogs },
   { id: 'cats', label: 'Cats', image: HOME_IMAGES.categories.cats },
   { id: 'birds', label: 'Birds', image: HOME_IMAGES.categories.birds },
-  { id: 'fishes', label: 'Fishes', image: HOME_IMAGES.categories.fishes },
+  { id: 'fishes', label: 'Fish', image: HOME_IMAGES.categories.fishes },
   { id: 'rabbits', label: 'Rabbits', image: HOME_IMAGES.categories.rabbits },
   { id: 'others', label: 'Others', icon: 'paw' },
 ];
